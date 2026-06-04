@@ -1,0 +1,13 @@
+{
+    "name": "financeiro/app",
+    "description": "FinanceiroApp",
+    "type": "project",
+    "require-dev": {
+        "phpunit/phpunit": "9.6"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    }
+}

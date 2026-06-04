@@ -1,0 +1,442 @@
+/* ============================================
+   FinanceiroApp — Custom Styles
+   Tema: Claro
+   ============================================ */
+
+/* --- Fonte global reduzida --- */
+html {
+    font-size: 80%;
+}
+
+/* --- Sidebar --- */
+#sidebar {
+    width: 250px;
+    min-height: 100vh;
+    position: fixed;
+    top: 56px; /* altura da navbar */
+    left: 0;
+    z-index: 1000;
+    transition: margin-left 0.3s ease;
+    overflow-y: auto;
+}
+
+#sidebar .nav-link {
+    color: #495057;
+    border-radius: 0.375rem;
+    margin: 2px 0;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+#sidebar .nav-link:hover {
+    background-color: #e9ecef;
+    color: #0d6efd;
+}
+
+#sidebar .nav-link.active {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+#sidebar .nav-link.active:hover {
+    background-color: #0b5ed7;
+    color: #fff;
+}
+
+#sidebar .nav-link .badge {
+    font-size: 0.65rem;
+}
+
+/* --- Sidebar Group (collapsible) --- */
+#sidebar .sidebar-group-toggle {
+    font-weight: 600;
+}
+
+#sidebar .sidebar-group-arrow {
+    font-size: 0.7rem;
+    transition: transform 0.25s ease;
+}
+
+#sidebar .sidebar-group-toggle:not(.collapsed) .sidebar-group-arrow {
+    transform: rotate(180deg);
+}
+
+#sidebar .sidebar-submenu {
+    padding-left: 1rem;
+}
+
+#sidebar .sidebar-submenu .nav-link {
+    font-size: 0.92em;
+    padding: 0.35rem 0.75rem;
+}
+
+/* --- Page Content --- */
+#page-content-wrapper {
+    margin-left: 250px;
+    transition: margin-left 0.3s ease;
+}
+
+/* --- Responsividade --- */
+@media (max-width: 991.98px) {
+    #sidebar {
+        margin-left: -250px;
+    }
+
+    #sidebar.show {
+        margin-left: 0;
+    }
+
+    #page-content-wrapper {
+        margin-left: 0;
+    }
+}
+
+/* --- Login Page --- */
+.login-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.1);
+}
+
+.login-card .card-body {
+    padding: 2.5rem;
+}
+
+.login-logo {
+    font-size: 2.5rem;
+    color: #0d6efd;
+}
+
+/* --- Status Badges --- */
+.badge-ativo {
+    background-color: #198754;
+    color: #fff;
+}
+
+.badge-bloqueado {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* --- Navbar Logo --- */
+.navbar-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+/* --- Logo Preview (form) --- */
+.logo-preview {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border: 2px solid #dee2e6;
+    padding: 4px;
+    background: #fff;
+}
+
+.logo-placeholder {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #dee2e6;
+    color: #adb5bd;
+    font-size: 2rem;
+    background: #f8f9fa;
+    margin: 0 auto;
+}
+
+/* --- Table Logo --- */
+.table-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.table-logo-placeholder {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e9ecef;
+    color: #adb5bd;
+    font-size: 0.9rem;
+}
+
+/* --- Action Buttons (table) --- */
+.btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+/* --- Page Header --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.page-header h2 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* --- Table --- */
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    border-top: none;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* --- Filter Bar --- */
+.filter-bar {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* --- Sidebar overlay (mobile) --- */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+}
+
+.sidebar-overlay.show {
+    display: block;
+}
+
+/* --- Form Section --- */
+.form-section {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.form-section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* --- Permissions grid --- */
+.permissions-grid .form-check {
+    margin-bottom: 0.25rem;
+}
+
+.permissions-module {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.permissions-module h6 {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+/* ============================================
+   Acessibilidade: respeitar preferência de
+   animação reduzida do usuário
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================
+   Dark Mode (via prefers-color-scheme)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1a1d21;
+        color: #dee2e6;
+    }
+
+    #sidebar {
+        background-color: #212529 !important;
+        border-color: #343a40 !important;
+    }
+
+    #sidebar .nav-link {
+        color: #adb5bd;
+    }
+
+    #sidebar .nav-link:hover {
+        background-color: #343a40;
+        color: #6ea8fe;
+    }
+
+    #sidebar .nav-link.active {
+        background-color: #0d6efd;
+        color: #fff;
+    }
+
+    .navbar {
+        background-color: #212529 !important;
+        border-color: #343a40 !important;
+    }
+
+    .login-wrapper {
+        background: linear-gradient(135deg, #1a1d21 0%, #2c3034 100%);
+    }
+
+    .login-card {
+        background-color: #2c3034;
+        color: #dee2e6;
+    }
+
+    .form-section {
+        background: #212529;
+        border-color: #343a40;
+    }
+
+    .filter-bar {
+        background-color: #212529;
+    }
+
+    .permissions-module {
+        background: #212529;
+    }
+
+    .table {
+        --bs-table-bg: #1a1d21;
+        --bs-table-color: #dee2e6;
+        --bs-table-hover-bg: #2c3034;
+        --bs-table-striped-bg: #212529;
+    }
+
+    .table th {
+        color: #adb5bd;
+    }
+
+    .card {
+        background-color: #212529;
+        border-color: #343a40;
+        color: #dee2e6;
+    }
+
+    .form-control,
+    .form-select {
+        background-color: #2c3034;
+        border-color: #495057;
+        color: #dee2e6;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #343a40;
+        border-color: #6ea8fe;
+        color: #dee2e6;
+    }
+
+    .form-section-title {
+        color: #adb5bd;
+        border-bottom-color: #343a40;
+    }
+
+    .badge.bg-light {
+        background-color: #343a40 !important;
+        color: #dee2e6 !important;
+    }
+
+    .dropdown-menu {
+        background-color: #2c3034;
+        border-color: #495057;
+    }
+
+    .dropdown-item {
+        color: #dee2e6;
+    }
+
+    .dropdown-item:hover {
+        background-color: #343a40;
+        color: #fff;
+    }
+
+    .modal-content {
+        background-color: #2c3034;
+        color: #dee2e6;
+    }
+
+    .btn-outline-secondary {
+        color: #adb5bd;
+        border-color: #495057;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #495057;
+        color: #fff;
+    }
+
+    .sidebar-overlay.show {
+        background: rgba(0, 0, 0, 0.6);
+    }
+
+    .alert {
+        border: none;
+    }
+
+    .logo-placeholder {
+        background: #2c3034;
+        border-color: #495057;
+        color: #6c757d;
+    }
+
+    .contato-row {
+        background-color: #212529 !important;
+        border-color: #343a40 !important;
+    }
+
+    .table-logo-placeholder {
+        background: #343a40;
+        color: #6c757d;
+    }
+}

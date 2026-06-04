@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "SELECT": true,
+        "/^php vendor/bin/phpunit --testsuite Integration --colors=always 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

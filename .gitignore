@@ -1,0 +1,11 @@
+# Variáveis de ambiente (dados sensíveis)
+.env
+
+# Uploads de usuários
+public/uploads/logos/*
+!public/uploads/logos/.gitkeep
+
+# Dependências / cache
+vendor/
+node_modules/
+.env.example

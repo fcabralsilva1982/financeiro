@@ -1,0 +1,17 @@
+# ============================================================
+# FinanceiroApp — Configuração de segurança do servidor
+# ============================================================
+
+# Desabilitar listagem de diretórios
+Options -Indexes
+
+# Bloquear acesso a arquivos sensíveis
+<FilesMatch "\.(env|log|sql|json|lock|md|yml|yaml)$">
+    Require all denied
+</FilesMatch>
+
+# Bloquear acesso ao diretório .github
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^\.github(/|$) - [F,L]
+</IfModule>
