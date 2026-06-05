@@ -22,6 +22,7 @@ require __DIR__ . '/../layout/sidebar.php';
     <?= csrf_field() ?>
     <?php if ($isEdit): ?>
         <input type="hidden" name="id" value="<?= e($usuario['id'] ?? '') ?>">
+        <input type="hidden" name="vinculo_id" value="<?= e($usuario['vinculo_id'] ?? '') ?>">
     <?php endif; ?>
 
     <!-- Dados Pessoais -->

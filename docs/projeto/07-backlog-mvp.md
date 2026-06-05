@@ -20,13 +20,13 @@
 
 | ID | Tipo | Descrição | Prioridade | Est. | Status | Deps | Requisitos |
 |----|------|-----------|-----------|------|--------|------|-----------|
-| B-001 | Tarefa Técnica | Criar migration SQL para garantir schema atualizado: `usuario_termos`, campos `criado_por_usuario_id` em tabelas financeiras, `updated_at` em todas as tabelas | Alta | M | Pendente | — | RF-006, RNF-018 |
-| B-002 | Historia | Implementar CRUD real de usuários: criar, editar, bloquear, desbloquear persistindo em `usuarios` e `usuario_empresa` (substituir mock atual) | Alta | G | Pendente | B-001 | RF-006, RF-007, RF-008, RF-010 |
-| B-003 | Historia | Implementar troca de empresa ativa via menu sem novo login; recarregar permissões na sessão | Alta | M | Pendente | B-002 | RF-002, RN-008 |
-| B-004 | Historia | Implementar alteração de senha pelo próprio usuário (verificar senha atual + validar nova) | Média | P | Pendente | B-002 | RF-005 |
-| B-005 | Historia | Implementar tela de aceite de termo de uso no primeiro login; registrar aceite em `usuario_termos` | Média | M | Pendente | B-001 | RF-047, RN-020 |
-| B-006 | Tarefa Técnica | Atualizar `PERMISSION_MAP` no config para incluir módulos novos: `contas_pagar`, `dashboard`, `relatorios`, `conciliacao`, `importacao`, `categorias` | Alta | P | Pendente | — | RF-003, RN-002 |
-| B-007 | Tarefa Técnica | Criar tela de gestão de perfis com permissões para os novos módulos | Média | M | Pendente | B-006 | RF-003 |
+| B-001 | Tarefa Técnica | Criar migration SQL para garantir schema atualizado: `usuario_termos`, campos `criado_por_usuario_id` em tabelas financeiras, `updated_at` em todas as tabelas | Alta | M | Concluído | — | RF-006, RNF-018 |
+| B-002 | Historia | Implementar CRUD real de usuários: criar, editar, bloquear, desbloquear persistindo em `usuarios` e `usuario_empresa` (substituir mock atual) | Alta | G | Concluído | B-001 | RF-006, RF-007, RF-008, RF-010 |
+| B-003 | Historia | Implementar troca de empresa ativa via menu sem novo login; recarregar permissões na sessão | Alta | M | Concluído | B-002 | RF-002, RN-008 |
+| B-004 | Historia | Implementar alteração de senha pelo próprio usuário (verificar senha atual + validar nova) | Média | P | Concluído | B-002 | RF-005 |
+| B-005 | Historia | Implementar tela de aceite de termo de uso no primeiro login; registrar aceite em `usuario_termos` | Média | M | Concluído | B-001 | RF-047, RN-020 |
+| B-006 | Tarefa Técnica | Atualizar `PERMISSION_MAP` no config para incluir módulos novos: `contas_pagar`, `dashboard`, `relatorios`, `conciliacao`, `importacao`, `categorias` | Alta | P | Concluído | — | RF-003, RN-002 |
+| B-007 | Tarefa Técnica | Criar tela de gestão de perfis com permissões para os novos módulos | Média | M | Concluído | B-006 | RF-003 |
 
 ---
 
@@ -34,17 +34,17 @@
 
 | ID | Tipo | Descrição | Prioridade | Est. | Status | Deps | Requisitos |
 |----|------|-----------|-----------|------|--------|------|-----------|
-| B-010 | Tarefa Técnica | Criar tabelas: `contas_pagar`, `contas_pagar_parcelas`, `contas_pagar_historico`, `categorias` (migration SQL) | Alta | M | Pendente | B-001 | RF-017, RF-018, RF-045 |
-| B-011 | Historia | Implementar CRUD de categorias financeiras por empresa (nome, tipo: receita/despesa) | Média | M | Pendente | B-010 | RF-045 |
-| B-012 | Historia | Implementar listagem de Contas a Pagar com filtros: status, período, fornecedor, categoria, busca | Alta | M | Pendente | B-010 | RF-022 |
-| B-013 | Historia | Implementar formulário de criação/edição de Conta a Pagar: fornecedor, descrição, valor, datas, categoria, forma de pagamento, recorrência | Alta | G | Pendente | B-010, B-011 | RF-017, RF-021 |
-| B-014 | Historia | Implementar parcelamento de Conta a Pagar: geração de N parcelas com validação de somatório | Alta | M | Pendente | B-013 | RF-018, RN-005 |
-| B-015 | Historia | Implementar fluxo de aprovação: botão "Enviar para Aprovação", botão "Aprovar" (com verificação de segregação de funções), log do aprovador | Alta | M | Pendente | B-013 | RF-019, RN-004, RN-010 |
-| B-016 | Historia | Implementar baixa de parcela de Conta a Pagar: data pagamento, valor pago, forma de pagamento, upload de comprovante | Alta | G | Pendente | B-015 | RF-020, RN-006, RN-013 |
-| B-017 | Historia | Implementar cancelamento de Conta a Pagar com validação de status permitidos | Alta | P | Pendente | B-013 | RN-004 |
-| B-018 | Tarefa Técnica | Implementar job `jobs/atualizar_status.php`: atualizar parcelas vencidas (CR e CP) e contas-mãe | Alta | M | Pendente | B-010 | RF-014, RN-003, RN-004 |
-| B-019 | Historia | Implementar contas recorrentes: ao baixar última parcela de conta CP recorrente, gerar próxima ocorrência em `rascunho` | Baixa | M | Pendente | B-016 | RF-021, RN-012 |
-| B-020 | Tarefa Técnica | Criar controller de download de comprovante autenticado (sem URL direta ao arquivo) | Alta | P | Pendente | B-016 | RNF-008, RN-013 |
+| B-010 | Tarefa Técnica | Criar tabelas: `contas_pagar`, `contas_pagar_parcelas`, `contas_pagar_historico`, `categorias` (migration SQL) | Alta | M | Concluído | B-001 | RF-017, RF-018, RF-045 |
+| B-011 | Historia | Implementar CRUD de categorias financeiras por empresa (nome, tipo: receita/despesa) | Média | M | Concluído | B-010 | RF-045 |
+| B-012 | Historia | Implementar listagem de Contas a Pagar com filtros: status, período, fornecedor, categoria, busca | Alta | M | Concluído | B-010 | RF-022 |
+| B-013 | Historia | Implementar formulário de criação/edição de Conta a Pagar: fornecedor, descrição, valor, datas, categoria, forma de pagamento, recorrência | Alta | G | Concluído | B-010, B-011 | RF-017, RF-021 |
+| B-014 | Historia | Implementar parcelamento de Conta a Pagar: geração de N parcelas com validação de somatório | Alta | M | Concluído | B-013 | RF-018, RN-005 |
+| B-015 | Historia | Implementar fluxo de aprovação: botão "Enviar para Aprovação", botão "Aprovar" (com verificação de segregação de funções), log do aprovador | Alta | M | Concluído | B-013 | RF-019, RN-004, RN-010 |
+| B-016 | Historia | Implementar baixa de parcela de Conta a Pagar: data pagamento, valor pago, forma de pagamento, upload de comprovante | Alta | G | Concluído | B-015 | RF-020, RN-006, RN-013 |
+| B-017 | Historia | Implementar cancelamento de Conta a Pagar com validação de status permitidos | Alta | P | Concluído | B-013 | RN-004 |
+| B-018 | Tarefa Técnica | Implementar job `jobs/atualizar_status.php`: atualizar parcelas vencidas (CR e CP) e contas-mãe | Alta | M | Concluído | B-010 | RF-014, RN-003, RN-004 |
+| B-019 | Historia | Implementar contas recorrentes: ao baixar última parcela de conta CP recorrente, gerar próxima ocorrência em `rascunho` | Baixa | M | Concluído | B-016 | RF-021, RN-012 |
+| B-020 | Tarefa Técnica | Criar controller de download de comprovante autenticado (sem URL direta ao arquivo) | Alta | P | Concluído | B-016 | RNF-008, RN-013 |
 
 ---
 
@@ -52,11 +52,11 @@
 
 | ID | Tipo | Descrição | Prioridade | Est. | Status | Deps | Requisitos |
 |----|------|-----------|-----------|------|--------|------|-----------|
-| B-030 | Tarefa Técnica | Criar model `Dashboard.php` com queries agregadas otimizadas (com índices): totais por status, inadimplência, vencimentos próximos, top clientes/fornecedores | Alta | G | Pendente | B-010 | RF-023, RF-024, RF-025, RF-026 |
-| B-031 | Historia | Implementar view do Dashboard: cards com KPIs (a receber, a pagar, saldo previsto, inadimplência) | Alta | M | Pendente | B-030 | RF-023 |
-| B-032 | Historia | Implementar gráfico de fluxo de caixa mensal (últimos 6 meses, barras: entradas vs saídas) via Chart.js | Alta | M | Pendente | B-030 | RF-024 |
-| B-033 | Historia | Implementar lista de contas vencendo nos próximos 7 dias no dashboard, com links diretos | Alta | P | Pendente | B-030 | RF-025 |
-| B-034 | Historia | Implementar ranking top 5 clientes devedores e top 5 fornecedores no dashboard | Média | P | Pendente | B-030 | RF-026 |
+| B-030 | Tarefa Técnica | Criar model `Dashboard.php` com queries agregadas otimizadas (com índices): totais por status, inadimplência, vencimentos próximos, top clientes/fornecedores | Alta | G | Concluído | B-010 | RF-023, RF-024, RF-025, RF-026 |
+| B-031 | Historia | Implementar view do Dashboard: cards com KPIs (a receber, a pagar, saldo previsto, inadimplência) | Alta | M | Concluído | B-030 | RF-023 |
+| B-032 | Historia | Implementar gráfico de fluxo de caixa mensal (últimos 6 meses, barras: entradas vs saídas) via Chart.js | Alta | M | Concluído | B-030 | RF-024 |
+| B-033 | Historia | Implementar lista de contas vencendo nos próximos 7 dias no dashboard, com links diretos | Alta | P | Concluído | B-030 | RF-025 |
+| B-034 | Historia | Implementar ranking top 5 clientes devedores e top 5 fornecedores no dashboard | Média | P | Concluído | B-030 | RF-026 |
 
 ---
 

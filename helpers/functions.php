@@ -232,11 +232,16 @@ function set_flash($type, $message) {
  * Envia o header HTTP 'Location' e chama exit() para garantir
  * que nenhum código subsequente seja executado.
  *
+ * A URL recebida pode estar escapada para HTML (ex: '&amp;'),
+ * portanto ela é decodificada antes do envio no header.
+ *
  * @param string $url URL de destino (gerada por url() ou absoluta)
  * @return never
  */
 function redirect($url) {
-    header('Location: ' . $url);
+    // url() retorna valor escapado para HTML; no header HTTP precisamos da URL crua.
+    $redirectUrl = html_entity_decode((string) $url, ENT_QUOTES, 'UTF-8');
+    header('Location: ' . $redirectUrl);
     exit;
 }
 
@@ -273,6 +278,15 @@ function current_empresa_id() {
  */
 function current_empresa_nome() {
     return $_SESSION['user']['empresa_nome'] ?? '';
+}
+
+/**
+ * Retorna o codigo da empresa ativa na sessao.
+ *
+ * @return string
+ */
+function current_empresa_codigo() {
+    return $_SESSION['user']['empresa_codigo'] ?? '';
 }
 
 /**
@@ -334,6 +348,74 @@ function filter_by_empresa($records, $key = 'empresa_id') {
  */
 function current_user() {
     return $_SESSION['user'] ?? null;
+}
+
+/**
+ * Retorna os vinculos de empresa disponiveis para o usuario logado.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function user_empresas_disponiveis(): array {
+    return $_SESSION['user_empresas'] ?? [];
+}
+
+/**
+ * Informa se o usuario pode alternar a empresa ativa.
+ *
+ * @return bool
+ */
+function can_switch_empresa(): bool {
+    return count(user_empresas_disponiveis()) > 1;
+}
+
+/**
+ * Verifica se o usuario aceitou a versao atual dos termos.
+ *
+ * @param string $usuarioId
+ * @return bool
+ */
+function usuario_aceitou_termo_versao_atual(string $usuarioId): bool {
+    try {
+        $pdo = db();
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM usuario_termos WHERE usuario_id = :uid AND versao_termo = :versao');
+        $stmt->execute([
+            ':uid' => $usuarioId,
+            ':versao' => TERMS_CURRENT_VERSION,
+        ]);
+        return (int) $stmt->fetchColumn() > 0;
+    } catch (Exception $ex) {
+        // Fail-open para nao bloquear acesso caso migration ainda nao tenha sido aplicada.
+        return false;
+    }
+}
+
+/**
+ * Determina se o usuario logado precisa aceitar os termos.
+ *
+ * @return bool
+ */
+function usuario_deve_aceitar_termos(): bool {
+    if (!is_logged_in()) {
+        return false;
+    }
+
+    $cacheVersao = $_SESSION['terms_accepted_version'] ?? '';
+    if ($cacheVersao === TERMS_CURRENT_VERSION) {
+        return false;
+    }
+
+    $user = current_user();
+    $usuarioId = (string) ($user['id'] ?? '');
+    if ($usuarioId === '') {
+        return false;
+    }
+
+    if (usuario_aceitou_termo_versao_atual($usuarioId)) {
+        $_SESSION['terms_accepted_version'] = TERMS_CURRENT_VERSION;
+        return false;
+    }
+
+    return true;
 }
 
 /**

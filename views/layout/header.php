@@ -70,9 +70,24 @@
                     <li><span class="dropdown-item-text small text-muted">
                         <i class="bi bi-shield me-1"></i><?= e(current_user()['perfil_nome'] ?? '') ?>
                     </span></li>
+                    <?php if (can_switch_empresa()): ?>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><span class="dropdown-item-text small text-muted">Alternar empresa</span></li>
+                    <?php foreach (user_empresas_disponiveis() as $empresa): ?>
+                    <li>
+                        <a class="dropdown-item d-flex justify-content-between align-items-center"
+                           href="<?= url('login', 'switch_empresa', ['empresa_id' => $empresa['empresa_id']]) ?>">
+                            <span><?= e($empresa['empresa_nome']) ?></span>
+                            <?php if (($empresa['empresa_id'] ?? '') === current_empresa_id()): ?>
+                                <i class="bi bi-check2 text-success"></i>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
                     <li><hr class="dropdown-divider"></li>
                     <?php endif; ?>
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i><?= e(__('common.meu_perfil')) ?></a></li>
+                    <li><a class="dropdown-item" href="<?= url('usuarios', 'meu_perfil') ?>"><i class="bi bi-person me-2"></i><?= e(__('common.meu_perfil')) ?></a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="<?= url('login', 'logout') ?>"><i class="bi bi-box-arrow-right me-2"></i><?= e(__('menu.sair')) ?></a></li>
                 </ul>

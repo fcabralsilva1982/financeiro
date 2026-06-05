@@ -4,6 +4,8 @@
  * Variáveis esperadas: $perfil (array|null), $isEdit (bool), $errors (array)
  */
 $errors = $errors ?? [];
+$isEdit = $isEdit ?? false;
+$perfil = $perfil ?? [];
 $pageTitle = $isEdit ? __('perfis.edit') : __('perfis.new');
 require __DIR__ . '/../layout/header.php';
 require __DIR__ . '/../layout/sidebar.php';
@@ -13,8 +15,13 @@ $modulos = [
     'empresas'  => __('permissions.modulo_empresas'),
     'usuarios'  => __('permissions.modulo_usuarios'),
     'perfis'    => __('permissions.modulo_perfis'),
-    'financeiro'=> __('permissions.modulo_financeiro'),
-    'relatorios'=> __('permissions.modulo_relatorios'),
+    'contas_receber' => __('permissions.modulo_contas_receber'),
+    'contas_pagar' => __('permissions.modulo_contas_pagar'),
+    'dashboard' => __('permissions.modulo_dashboard'),
+    'relatorios' => __('permissions.modulo_relatorios'),
+    'conciliacao' => __('permissions.modulo_conciliacao'),
+    'importacao' => __('permissions.modulo_importacao'),
+    'categorias' => __('permissions.modulo_categorias'),
 ];
 $acoes = ['visualizar', 'criar', 'editar', 'bloquear', 'excluir'];
 $permissoesAtuais = $perfil['permissoes'] ?? [];
@@ -95,7 +102,7 @@ $permissoesAtuais = $perfil['permissoes'] ?? [];
                             <?php
                             $permKey = $moduloKey . '.' . $acao;
                             $isChecked = in_array($permKey, $permissoesAtuais) ? 'checked' : '';
-                            $isDisabled = in_array($moduloKey, ['financeiro', 'relatorios']) ? 'disabled' : '';
+                            $isDisabled = in_array($moduloKey, ['relatorios'], true) ? 'disabled' : '';
                             ?>
                             <input class="form-check-input" type="checkbox"
                                    name="permissoes[]" value="<?= e($permKey) ?>"

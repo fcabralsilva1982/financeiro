@@ -94,14 +94,17 @@ class ContasReceber {
 }
 
 function gerar_codigo_conta() {
-    global $db;
-    $sql = "SELECT MAX(codigo) AS ultimo FROM contas_receber WHERE codigo LIKE 'CR-%'";
-    $row = $db->selectOne($sql);
+    $pdo = db();
+    $sql = "SELECT codigo FROM contas_receber WHERE codigo LIKE 'CR-%' ORDER BY codigo DESC LIMIT 1";
+    $stmt = $pdo->query($sql);
+    $ultimo = (string) ($stmt->fetchColumn() ?: '');
+
     $num = 1;
-    if ($row && preg_match('/CR-(\d+)/', $row['ultimo'], $m)) {
-        $num = (int)$m[1] + 1;
+    if ($ultimo !== '' && preg_match('/CR-(\d+)/', $ultimo, $m) === 1) {
+        $num = ((int) $m[1]) + 1;
     }
-    return 'CR-' . str_pad($num, 4, '0', STR_PAD_LEFT);
+
+    return 'CR-' . str_pad((string) $num, 4, '0', STR_PAD_LEFT);
 }
 
 function get_clientes_empresa($empresaId) {

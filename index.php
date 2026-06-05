@@ -17,7 +17,7 @@ $page   = $_GET['page'] ?? '';
 $action = $_GET['action'] ?? 'index';
 
 // Páginas válidas
-$validPages = ['login', 'empresas', 'usuarios', 'perfis', 'logs', 'clientes', 'fornecedores', 'contas_receber'];
+$validPages = ['login', 'dashboard', 'empresas', 'usuarios', 'perfis', 'logs', 'clientes', 'fornecedores', 'contas_receber', 'contas_pagar', 'categorias'];
 
 // Se nenhuma página informada ou página inválida, redireciona para login
 if (empty($page) || !in_array($page, $validPages)) {
@@ -42,6 +42,12 @@ if ($page !== 'login' && is_logged_in()) {
         redirect(url('login'));
     }
     $_SESSION['ultima_atividade'] = time();
+}
+
+// Exige aceite dos termos antes de acessar qualquer modulo interno.
+if ($page !== 'login' && is_logged_in() && usuario_deve_aceitar_termos()) {
+    set_flash('warning', __('termos.aviso_aceite_obrigatorio'));
+    redirect(url('login', 'termos'));
 }
 
 // Proteção de tenant: empresas só podem ser gerenciadas pela empresa master

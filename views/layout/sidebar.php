@@ -6,11 +6,10 @@
         </h6>
     </div>
     <ul class="nav flex-column p-2">
-        <!-- Dashboard (futuro - desabilitado) -->
+        <!-- Dashboard -->
         <li class="nav-item">
-            <a class="nav-link disabled text-muted" href="#">
+            <a class="nav-link <?= selected_menu('dashboard') ?>" href="<?= url('dashboard') ?>">
                 <i class="bi bi-speedometer2 me-2"></i><?= e(__('menu.dashboard')) ?>
-                <span class="badge bg-secondary ms-auto">soon</span>
             </a>
         </li>
 
@@ -57,6 +56,16 @@
                     <li class="nav-item">
                         <a class="nav-link <?= selected_menu('contas_receber') ?>" href="<?= url('contas_receber') ?>">
                             <i class="bi bi-arrow-down-circle me-2"></i><?= e(__('menu.contas_receber')) ?>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= selected_menu('contas_pagar') ?>" href="<?= url('contas_pagar') ?>">
+                            <i class="bi bi-arrow-up-circle me-2"></i><?= e(__('menu.contas_pagar')) ?>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= selected_menu('categorias') ?>" href="<?= url('categorias') ?>">
+                            <i class="bi bi-tags me-2"></i><?= e(__('menu.categorias')) ?>
                         </a>
                     </li>
                 </ul>

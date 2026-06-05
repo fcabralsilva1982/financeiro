@@ -84,7 +84,7 @@ require __DIR__ . '/../layout/sidebar.php';
                         <?php endif; ?>
                     </td>
                     <td>
-                        <a href="<?= url('usuarios', 'edit', ['id' => $usuario['id']]) ?>"
+                        <a href="<?= url('usuarios', 'edit', ['id' => $usuario['id'], 'vinculo_id' => $usuario['vinculo_id'] ?? '']) ?>"
                            class="btn btn-sm btn-outline-primary btn-action"
                            data-bs-toggle="tooltip" title="<?= e(__('common.editar')) ?>">
                             <i class="bi bi-pencil"></i>
@@ -113,7 +113,7 @@ require __DIR__ . '/../layout/sidebar.php';
                         <button type="button"
                                 class="btn btn-sm btn-outline-danger btn-action"
                                 data-bs-toggle="modal" data-bs-target="#modalExcluir"
-                                data-url="<?= url('usuarios', 'delete', ['id' => $usuario['id']]) ?>"
+                                data-url="<?= url('usuarios', 'delete', ['id' => $usuario['id'], 'vinculo_id' => $usuario['vinculo_id'] ?? '']) ?>"
                                 title="<?= e(__('common.excluir')) ?>">
                             <i class="bi bi-trash"></i>
                         </button>

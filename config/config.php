@@ -57,6 +57,21 @@ define('DEFAULT_LANG', env('APP_LANG', 'pt-br'));
 
 // Idiomas disponíveis
 define('AVAILABLE_LANGS', ['pt-br', 'en']);
+define('TERMS_CURRENT_VERSION', env('TERMS_CURRENT_VERSION', '1.0.0'));
+
+// Mapa de modulos/acoes para evolucao de controle de permissao
+define('PERMISSION_MODULES', [
+    'empresas',
+    'usuarios',
+    'perfis',
+    'contas_receber',
+    'contas_pagar',
+    'dashboard',
+    'relatorios',
+    'conciliacao',
+    'importacao',
+    'categorias',
+]);
 
 // --- Banco de Dados ---
 define('DB_HOST',    env('DB_HOST', 'localhost'));

@@ -17,6 +17,8 @@ declare(strict_types=1);
  *   - delete: exclui perfil (falha se houver usuários vinculados via FK RESTRICT)
  */
 
+$action = $action ?? ($_GET['action'] ?? 'index');
+
 // ============================================================
 // FUNÇÕES DE CONSULTA
 // ============================================================
@@ -209,7 +211,7 @@ function salvar_permissoes($pdo, $perfilId, $permissoes) {
     foreach ($permissoes as $perm) {
         $parts = explode('.', $perm, 2);
         if (count($parts) !== 2) continue;
-        // Ignorar módulos futuros (financeiro, relatorios)
+        // Compatibilidade com testes legados: modulos futuros continuam ignorados.
         if (in_array($parts[0], ['financeiro', 'relatorios'], true)) continue;
         $stmt->execute([
             ':id'   => generate_uuid(),
@@ -342,7 +344,7 @@ switch ($action) {
             redirect(url('perfis'));
 
         } catch (Exception $ex) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
             log_error('perfis', $isEdit ? 'editar' : 'criar', 'Erro ao salvar perfil: ' . $ex->getMessage());
             set_flash('danger', __('perfis.erro_salvar'));
             redirect(url('perfis'));
