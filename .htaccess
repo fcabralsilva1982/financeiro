@@ -2,16 +2,61 @@
 # FinanceiroApp — Configuração de segurança do servidor
 # ============================================================
 
+# Suprimir informações do servidor
+ServerSignature Off
+
 # Desabilitar listagem de diretórios
-Options -Indexes
+Options -Indexes -ExecCGI
+
+# Headers de segurança via Apache (camada adicional ao PHP)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    Header always set Cross-Origin-Resource-Policy "same-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
+    Header always set Pragma "no-cache"
+    # Remover headers que revelam stack
+    Header always unset X-Powered-By
+    Header always unset Server
+</IfModule>
 
 # Bloquear acesso a arquivos sensíveis
-<FilesMatch "\.(env|log|sql|json|lock|md|yml|yaml)$">
+<FilesMatch "\.(env|log|sql|json|lock|md|yml|yaml|bak|git|ini|dist|xml)$">
     Require all denied
 </FilesMatch>
 
-# Bloquear acesso ao diretório .github
+# Bloquear acesso direto a diretórios internos
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Bloquear .github
     RewriteRule ^\.github(/|$) - [F,L]
+
+    # Bloquear vendor (dependências)
+    RewriteRule ^vendor(/|$) - [F,L]
+
+    # Bloquear database/migrations
+    RewriteRule ^database(/|$) - [F,L]
+
+    # Bloquear helpers
+    RewriteRule ^helpers(/|$) - [F,L]
+
+    # Bloquear models
+    RewriteRule ^models(/|$) - [F,L]
+
+    # Bloquear tests
+    RewriteRule ^tests(/|$) - [F,L]
+
+    # Bloquear scripts
+    RewriteRule ^scripts(/|$) - [F,L]
+
+    # Bloquear docs
+    RewriteRule ^docs(/|$) - [F,L]
+
+    # Bloquear jobs
+    RewriteRule ^jobs(/|$) - [F,L]
 </IfModule>

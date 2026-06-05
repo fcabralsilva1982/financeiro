@@ -64,11 +64,11 @@
 
 | ID | Tipo | Descrição | Prioridade | Est. | Status | Deps | Requisitos |
 |----|------|-----------|-----------|------|--------|------|-----------|
-| B-040 | Historia | Implementar tela de configuração da régua de cobrança: criar/editar/excluir regras (dias_antes/depois, canal, mensagem) | Alta | M | Pendente | — | RF-030 |
-| B-041 | Tarefa Técnica | Implementar envio de e-mail via PHPMailer no job `jobs/regua_cobranca.php`: verificar opt_out, idempotência, registrar histórico | Alta | G | Pendente | B-040 | RF-031, RN-007 |
-| B-042 | Tarefa Técnica | Implementar envio via WhatsApp API no job: configuração de credenciais por empresa no `.env`, payload configurável por provedor, timeout e retry | Alta | G | Pendente | B-040 | RF-032, RN-007 |
-| B-043 | Historia | Implementar tela de histórico de disparos por conta a receber (canal, data, resultado) | Média | P | Pendente | B-041 | RF-033 |
-| B-044 | Tarefa Técnica | Implementar link de unsubscribe nos e-mails (token único por cliente, sem login) que atualiza `opt_out_lembretes = 1` | Média | M | Pendente | B-041 | RNF-021, RF-020 |
+| B-040 | Historia | Implementar tela de configuração da régua de cobrança: criar/editar/excluir regras (dias_antes/depois, canal, mensagem) | Alta | M | Concluído | — | RF-030 |
+| B-041 | Tarefa Técnica | Implementar envio de e-mail via PHPMailer no job `jobs/regua_cobranca.php`: verificar opt_out, idempotência, registrar histórico | Alta | G | Concluído | B-040 | RF-031, RN-007 |
+| B-042 | Tarefa Técnica | Implementar envio via WhatsApp API no job: configuração de credenciais por empresa no `.env`, payload configurável por provedor, timeout e retry | Alta | G | Concluído | B-040 | RF-032, RN-007 |
+| B-043 | Historia | Implementar tela de histórico de disparos por conta a receber (canal, data, resultado) | Média | P | Concluído | B-041 | RF-033 |
+| B-044 | Tarefa Técnica | Implementar link de unsubscribe nos e-mails (token único por cliente, sem login) que atualiza `opt_out_lembretes = 1` | Média | M | Concluído | B-041 | RNF-021, RF-020 |
 
 ---
 
@@ -113,7 +113,7 @@
 
 | ID | Tipo | Descrição | Prioridade | Est. | Status | Deps | Requisitos |
 |----|------|-----------|-----------|------|--------|------|-----------|
-| B-090 | Tarefa Técnica | Configurar headers de segurança HTTP em todas as respostas (CSP, X-Frame-Options, etc.) via `.htaccess` ou middleware PHP | Alta | P | Pendente | — | RNF-009 |
+| B-090 | Tarefa Técnica | Configurar headers de segurança HTTP em todas as respostas (CSP, X-Frame-Options, etc.) via `.htaccess` ou middleware PHP | Alta | P | Concluído | — | RNF-009 |
 | B-091 | Tarefa Técnica | Configurar `session.cookie_httponly = 1`, `session.cookie_samesite = Strict`, `session.gc_maxlifetime = 7200` no `config.php` | Alta | P | Pendente | — | RNF-010 |
 | B-092 | Tarefa Técnica | Implementar slow query log no MySQL (> 500ms) e criar procedimento de revisão semanal | Média | P | Pendente | — | RNF-004 |
 | B-093 | Tarefa Técnica | Configurar script de backup diário do banco com retenção de 30 dias; testar restore | Alta | M | Pendente | — | RNF-012 |

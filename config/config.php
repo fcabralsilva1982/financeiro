@@ -95,10 +95,17 @@ ini_set('log_errors', '1');
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https://ui-avatars.com");
+header('Cross-Origin-Opener-Policy: same-origin');
+header('Cross-Origin-Resource-Policy: same-origin');
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https://ui-avatars.com; connect-src 'self' https://viacep.com.br; object-src 'none'; base-uri 'self'; form-action 'self';");
 if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')) {
-    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
 }
+
+header('Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()');
+header('Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate');
+header('Pragma: no-cache');
+header('X-Permitted-Cross-Domain-Policies: none');
 
 // --- Sessão segura ---
 if (session_status() === PHP_SESSION_NONE) {
