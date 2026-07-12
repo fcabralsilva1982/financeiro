@@ -28,7 +28,7 @@ abstract class DatabaseTestCase extends BaseTestCase
             DB_CHARSET
         );
 
-        $root = new PDO($dsn, DB_USER, DB_PASS, [
+        $root = new PDO($dsn, env('DB_USER', 'root'), env('DB_PASS', ''), [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
 
@@ -39,8 +39,8 @@ abstract class DatabaseTestCase extends BaseTestCase
         // Conectar ao banco de teste
         static::$pdo = new PDO(
             "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname={$dbName};charset=" . DB_CHARSET,
-            DB_USER,
-            DB_PASS,
+            env('DB_USER', 'root'),
+            env('DB_PASS', ''),
             [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

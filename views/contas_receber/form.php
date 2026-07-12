@@ -53,7 +53,7 @@ require __DIR__ . '/../layout/sidebar.php';
             </div>
             <div class="col-md-2">
                 <label for="valor_total" class="form-label"><?= e(__('contas_receber.valor_total')) ?> <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" min="0" id="valor_total" name="valor_total" class="form-control" required value="<?= e($conta['valor_total'] ?? '') ?>">
+                <input type="text" inputmode="decimal" id="valor_total" name="valor_total" class="form-control" required data-mask="currency" value="<?= e(format_money_br($conta['valor_total'] ?? '')) ?>">
             </div>
             <div class="col-md-2">
                 <label for="forma_cobranca" class="form-label"><?= e(__('contas_receber.forma_cobranca')) ?> <span class="text-danger">*</span></label>

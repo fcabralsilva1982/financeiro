@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Retorna a instância única (singleton) de conexão PDO com o MySQL.
  *
  * Na primeira chamada, cria a conexão usando as constantes DB_HOST, DB_PORT,
- * DB_NAME, DB_USER, DB_PASS e DB_CHARSET definidas em config.php.
+ * DB_NAME e DB_CHARSET definidas em config.php, e DB_USER/DB_PASS via env().
  * Chamadas subsequentes reutilizam a mesma instância, evitando múltiplas conexões.
  *
  * Configurações de segurança:
@@ -31,7 +31,7 @@ function db() {
             PDO::ATTR_EMULATE_PREPARES   => false,
         ];
 
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        $pdo = new PDO($dsn, env('DB_USER', 'root'), env('DB_PASS', ''), $options);
     }
 
     return $pdo;

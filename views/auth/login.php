@@ -68,7 +68,7 @@
                 </p>
                 <div class="small text-muted text-start" style="font-size: 0.8rem;">
                     <div class="mb-1"><strong>Admin Master:</strong> joao.silva@alphatech.com.br / admin123</div>
-                    <div><strong>Empresa Cliente:</strong> maria.santos@betastore.com.br / user123</div>
+                    <div><strong>Empresa Cliente:</strong> angela@angela.com / Usuario123!</div>
                 </div>
             </div>
 

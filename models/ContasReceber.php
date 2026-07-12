@@ -56,7 +56,7 @@ class ContasReceber {
             ':cliente_id' => $dados['cliente_id'],
             ':codigo' => $dados['codigo'] ?? gerar_codigo_conta(),
             ':descricao' => $dados['descricao'],
-            ':valor_total' => $dados['valor_total'],
+            ':valor_total' => normalize_money_br($dados['valor_total'] ?? 0),
             ':data_emissao' => $dados['data_emissao'],
             ':data_vencimento' => $dados['data_vencimento'],
             ':forma_cobranca' => $dados['forma_cobranca'],
@@ -80,7 +80,7 @@ class ContasReceber {
             ':empresa_id' => $dados['empresa_id'],
             ':cliente_id' => $dados['cliente_id'],
             ':descricao' => $dados['descricao'],
-            ':valor_total' => $dados['valor_total'],
+            ':valor_total' => normalize_money_br($dados['valor_total'] ?? 0),
             ':data_emissao' => $dados['data_emissao'],
             ':data_vencimento' => $dados['data_vencimento'],
             ':forma_cobranca' => $dados['forma_cobranca'],
@@ -104,7 +104,7 @@ class ContasReceber {
         }
 
         $dataPagamento = trim((string) ($dados['data_pagamento'] ?? ''));
-        $valorPago = (float) ($dados['valor_pago'] ?? 0);
+        $valorPago = normalize_money_br($dados['valor_pago'] ?? 0);
         if ($dataPagamento === '' || $valorPago <= 0) {
             throw new RuntimeException('Data e valor pago sao obrigatorios para baixa.');
         }

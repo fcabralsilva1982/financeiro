@@ -144,7 +144,7 @@ final class ContasPagar
             $erros[] = 'Descricao e obrigatoria.';
         }
 
-        $valorTotal = (float) ($dados['valor_total'] ?? 0);
+        $valorTotal = normalize_money_br($dados['valor_total'] ?? 0);
         if ($valorTotal <= 0) {
             $erros[] = 'Valor total deve ser maior que zero.';
         }
@@ -208,7 +208,7 @@ final class ContasPagar
                 ':categoria_id' => $dados['categoria_id'] !== '' ? $dados['categoria_id'] : null,
                 ':codigo' => $codigo,
                 ':descricao' => trim((string) $dados['descricao']),
-                ':valor_total' => (float) $dados['valor_total'],
+                ':valor_total' => normalize_money_br($dados['valor_total'] ?? 0),
                 ':data_emissao' => $dados['data_emissao'],
                 ':data_vencimento' => $dados['data_vencimento'],
                 ':forma_pagamento' => $dados['forma_pagamento'],
@@ -268,7 +268,7 @@ final class ContasPagar
                 ':fornecedor_id' => $dados['fornecedor_id'],
                 ':categoria_id' => $dados['categoria_id'] !== '' ? $dados['categoria_id'] : null,
                 ':descricao' => trim((string) $dados['descricao']),
-                ':valor_total' => (float) $dados['valor_total'],
+                ':valor_total' => normalize_money_br($dados['valor_total'] ?? 0),
                 ':data_emissao' => $dados['data_emissao'],
                 ':data_vencimento' => $dados['data_vencimento'],
                 ':forma_pagamento' => $dados['forma_pagamento'],
@@ -371,7 +371,7 @@ final class ContasPagar
         }
 
         $dataPagamento = (string) ($dados['data_pagamento'] ?? '');
-        $valorPago = (float) ($dados['valor_pago'] ?? 0);
+        $valorPago = normalize_money_br($dados['valor_pago'] ?? 0);
         if ($dataPagamento === '' || $valorPago <= 0) {
             throw new RuntimeException('Data e valor pago sao obrigatorios para baixa.');
         }
@@ -453,7 +453,7 @@ final class ContasPagar
     private static function gerarParcelas(array $dados): array
     {
         $qtd = max(1, (int) ($dados['qtd_parcelas'] ?? 1));
-        $valorTotal = round((float) ($dados['valor_total'] ?? 0), 2);
+        $valorTotal = round(normalize_money_br($dados['valor_total'] ?? 0), 2);
         $dataBase = (string) ($dados['data_vencimento'] ?? date('Y-m-d'));
 
         $valorBase = round($valorTotal / $qtd, 2);

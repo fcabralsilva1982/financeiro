@@ -258,6 +258,50 @@ function e(string|int|float|null $string): string {
     return htmlspecialchars((string) ($string ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
+/**
+ * Formata valor monetário para exibição em pt-BR.
+ *
+ * @param mixed $valor
+ * @return string
+ */
+function format_money_br($valor): string
+{
+    if ($valor === null || $valor === '') {
+        return '';
+    }
+
+    return number_format((float) $valor, 2, ',', '.');
+}
+
+/**
+ * Normaliza valor monetário informado em pt-BR para formato numérico do PHP/SQL.
+ *
+ * Aceita entradas como "1.234,56", "1234,56" ou "1234.56".
+ *
+ * @param mixed $valor
+ * @return float
+ */
+function normalize_money_br($valor): float
+{
+    if ($valor === null) {
+        return 0.0;
+    }
+
+    $texto = trim((string) $valor);
+    if ($texto === '') {
+        return 0.0;
+    }
+
+    $texto = str_replace(['R$', ' '], '', $texto);
+
+    if (str_contains($texto, ',')) {
+        $texto = str_replace('.', '', $texto);
+        $texto = str_replace(',', '.', $texto);
+    }
+
+    return (float) $texto;
+}
+
 // ============================================================
 // Funções de Multi-Tenancy (isolamento por empresa)
 // ============================================================

@@ -3,29 +3,56 @@ declare(strict_types=1);
 
 /**
  * Configurações gerais do sistema
- * Valores sensíveis são lidos do arquivo .env na raiz do projeto.
+ * Valores sensíveis são lidos preferencialmente de C:/laragon/financeiro_param/.env.
  */
 
-// --- Carrega variáveis do .env ---
-$envPath = __DIR__ . '/../.env';
-if (file_exists($envPath)) {
+/**
+ * Carrega variáveis de um arquivo .env simples (KEY=VALUE).
+ */
+function load_env_file(string $envPath): void {
+    if (!file_exists($envPath)) {
+        return;
+    }
+
     $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) {
+        return;
+    }
+
     foreach ($lines as $line) {
         $line = trim($line);
         if ($line === '' || $line[0] === '#') {
             continue;
         }
+
         $pos = strpos($line, '=');
         if ($pos === false) {
             continue;
         }
-        $key   = trim(substr($line, 0, $pos));
+
+        $key = trim(substr($line, 0, $pos));
         $value = trim(substr($line, $pos + 1));
+
+        if (
+            (strlen($value) >= 2)
+            && (($value[0] === '"' && substr($value, -1) === '"') || ($value[0] === '\'' && substr($value, -1) === '\''))
+        ) {
+            $value = substr($value, 1, -1);
+        }
+
         if (!array_key_exists($key, $_ENV)) {
             $_ENV[$key] = $value;
         }
     }
 }
+
+// --- Carrega variáveis do .env ---
+$externalEnvPath = 'C:/laragon/financeiro_param/.env';
+$localEnvPath = __DIR__ . '/../.env';
+
+// Prioridade: ambiente do servidor -> .env externo -> .env local.
+load_env_file($externalEnvPath);
+load_env_file($localEnvPath);
 
 /**
  * Retorna valor de variável de ambiente com fallback padrão
@@ -59,6 +86,18 @@ define('DEFAULT_LANG', env('APP_LANG', 'pt-br'));
 define('AVAILABLE_LANGS', ['pt-br', 'en']);
 define('TERMS_CURRENT_VERSION', env('TERMS_CURRENT_VERSION', '1.0.0'));
 
+// Segredos e integrações
+define('APP_SECRET', env('APP_SECRET', 'change-me'));
+define('API_TOKEN', env('API_TOKEN', ''));
+define('SMTP_HOST', env('SMTP_HOST', ''));
+define('SMTP_PORT', (int) env('SMTP_PORT', '587'));
+define('SMTP_USER', env('SMTP_USER', ''));
+define('SMTP_PASS', env('SMTP_PASS', ''));
+define('SMTP_ENCRYPTION', env('SMTP_ENCRYPTION', 'tls'));
+define('MAIL_FROM_ADDRESS', env('MAIL_FROM_ADDRESS', ''));
+define('MAIL_FROM_NAME', env('MAIL_FROM_NAME', APP_NAME));
+define('VIACEP_API_URL', env('VIACEP_API_URL', 'https://viacep.com.br/ws'));
+
 // Mapa de modulos/acoes para evolucao de controle de permissao
 define('PERMISSION_MODULES', [
     'empresas',
@@ -77,8 +116,6 @@ define('PERMISSION_MODULES', [
 define('DB_HOST',    env('DB_HOST', 'localhost'));
 define('DB_PORT',    env('DB_PORT', '3306'));
 define('DB_NAME',    env('DB_NAME', 'financeiro_erp'));
-define('DB_USER',    env('DB_USER', 'root'));
-define('DB_PASS',    env('DB_PASS', ''));
 define('DB_CHARSET', env('DB_CHARSET', 'utf8mb4'));
 
 // Timezone

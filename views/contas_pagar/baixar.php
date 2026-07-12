@@ -29,7 +29,7 @@ require __DIR__ . '/../layout/sidebar.php';
                 </div>
                 <div class="col-md-3">
                     <label for="valor_pago" class="form-label">Valor Pago <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" min="0" id="valor_pago" name="valor_pago" class="form-control" required value="<?= e($parcela['valor']) ?>">
+                    <input type="text" inputmode="decimal" id="valor_pago" name="valor_pago" class="form-control" required data-mask="currency" value="<?= e(format_money_br($parcela['valor'])) ?>">
                 </div>
                 <div class="col-md-3">
                     <label for="forma_pagamento" class="form-label">Forma Pagamento <span class="text-danger">*</span></label>

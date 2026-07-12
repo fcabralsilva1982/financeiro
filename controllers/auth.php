@@ -239,7 +239,7 @@ switch ($action) {
 
         log_info('auth', 'login', 'Usuario ' . $usuarioBase['codigo'] . ' (' . $usuarioBase['nome'] . ') realizou login na empresa ' . $vinculos[0]['empresa_codigo'] . ' (' . $vinculos[0]['empresa_nome'] . ')');
         set_flash('success', __('login.bem_vindo') . ', ' . $usuarioBase['nome'] . '!');
-        redirect(url('empresas'));
+        redirect(url('dashboard'));
         break;
 
     case 'termos':
@@ -292,7 +292,7 @@ switch ($action) {
 
         log_info('auth', 'aceite_termos', 'Usuario aceitou os termos versao ' . TERMS_CURRENT_VERSION, $usuarioId);
         set_flash('success', __('termos.sucesso_aceite'));
-        redirect(url('empresas'));
+            redirect(url('dashboard'));
         break;
 
     case 'select_empresa':
@@ -351,7 +351,7 @@ switch ($action) {
 
         log_info('auth', 'login', 'Usuario ' . $usuarioPendente['codigo'] . ' (' . $usuarioPendente['nome'] . ') realizou login na empresa ' . $vinculoSelecionado['empresa_codigo'] . ' (' . $vinculoSelecionado['empresa_nome'] . ')');
         set_flash('success', __('login.bem_vindo') . ', ' . $usuarioPendente['nome'] . '!');
-        redirect(url('empresas'));
+            redirect(url('dashboard'));
         break;
 
     case 'switch_empresa':
@@ -390,7 +390,7 @@ switch ($action) {
 
         log_info('auth', 'empresa_trocada', 'Usuario alternou empresa ativa para ' . $vinculoSelecionado['empresa_codigo'] . ' (' . $vinculoSelecionado['empresa_nome'] . ')');
         set_flash('success', 'Empresa ativa alterada para ' . $vinculoSelecionado['empresa_nome'] . '.');
-        redirect(url('empresas'));
+            redirect(url('dashboard'));
         break;
 
     case 'logout':
