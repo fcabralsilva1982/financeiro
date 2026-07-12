@@ -82,6 +82,9 @@ require __DIR__ . '/../layout/sidebar.php';
                         </td>
                         <td>
                             <a href="<?= url('contas_receber', 'edit', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-primary btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <?php if (!in_array((string) $conta['status'], ['paga', 'cancelada'], true)): ?>
+                                <a href="<?= url('contas_receber', 'baixar', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-success btn-action" title="Dar baixa"><i class="bi bi-cash-coin"></i></a>
+                            <?php endif; ?>
                             <a href="<?= url('contas_receber', 'delete', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-danger btn-action" title="Excluir" onclick="return confirm('<?= e(__('contas_receber.confirmar_exclusao')) ?>')"><i class="bi bi-trash"></i></a>
                         </td>
                     </tr>

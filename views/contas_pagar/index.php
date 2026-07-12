@@ -92,7 +92,9 @@ require __DIR__ . '/../layout/sidebar.php';
                         <td>
                             <a href="<?= url('contas_pagar', 'edit', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-primary btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
                             <a href="<?= url('contas_pagar', 'enviar_aprovacao', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-warning btn-action" title="Enviar para aprovacao"><i class="bi bi-send"></i></a>
-                            <a href="<?= url('contas_pagar', 'aprovar', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-success btn-action" title="Aprovar"><i class="bi bi-check2-circle"></i></a>
+                            <?php if (can_user('contas_pagar', 'aprovar')): ?>
+                                <a href="<?= url('contas_pagar', 'aprovar', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-success btn-action" title="Aprovar"><i class="bi bi-check2-circle"></i></a>
+                            <?php endif; ?>
                             <a href="<?= url('contas_pagar', 'cancelar', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-danger btn-action" title="Cancelar"><i class="bi bi-x-circle"></i></a>
                         </td>
                     </tr>

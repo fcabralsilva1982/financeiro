@@ -369,6 +369,47 @@ function can_switch_empresa(): bool {
 }
 
 /**
+ * Verifica se o usuario logado possui uma permissao especifica.
+ *
+ * Usuários da empresa master possuem acesso total. Para os demais,
+ * a permissão é verificada na tabela perfil_permissoes pelo perfil ativo.
+ *
+ * @param string $modulo Módulo do sistema (ex: contas_pagar)
+ * @param string $acao Ação do módulo (ex: aprovar)
+ * @return bool
+ */
+function can_user(string $modulo, string $acao): bool
+{
+    if (!is_logged_in()) {
+        return false;
+    }
+
+    if (is_master_empresa()) {
+        return true;
+    }
+
+    $perfilId = (string) (current_user()['perfil_id'] ?? '');
+    if ($perfilId === '') {
+        return false;
+    }
+
+    try {
+        $pdo = db();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM perfil_permissoes WHERE perfil_id = :perfil_id AND modulo = :modulo AND acao = :acao'
+        );
+        $stmt->execute([
+            ':perfil_id' => $perfilId,
+            ':modulo' => $modulo,
+            ':acao' => $acao,
+        ]);
+        return (int) $stmt->fetchColumn() > 0;
+    } catch (Exception $ex) {
+        return false;
+    }
+}
+
+/**
  * Verifica se o usuario aceitou a versao atual dos termos.
  *
  * @param string $usuarioId

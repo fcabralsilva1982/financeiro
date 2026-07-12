@@ -147,6 +147,11 @@ switch ($action) {
 
     case 'aprovar':
         $id = (string) ($_GET['id'] ?? '');
+        if (!can_user('contas_pagar', 'aprovar')) {
+            set_flash('danger', __('common.acesso_negado'));
+            redirect(url('contas_pagar'));
+        }
+
         try {
             ContasPagar::aprovar($id, $empresaId, $usuarioId);
             log_info('contas_pagar', 'aprovar', 'Conta aprovada', $id);

@@ -14,16 +14,16 @@ require __DIR__ . '/../layout/sidebar.php';
     <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="text-muted small">Total a Receber</div>
-                <div class="fs-4 fw-bold">R$ <?= number_format((float) $kpis['total_receber'], 2, ',', '.') ?></div>
+                <div class="text-muted small">Recebimentos em Aberto</div>
+                <div class="fs-4 fw-bold">R$ <?= number_format((float) $kpis['total_receber_aberto'], 2, ',', '.') ?></div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="text-muted small">Total a Pagar</div>
-                <div class="fs-4 fw-bold">R$ <?= number_format((float) $kpis['total_pagar'], 2, ',', '.') ?></div>
+                <div class="text-muted small">Despesas em Aberto</div>
+                <div class="fs-4 fw-bold">R$ <?= number_format((float) $kpis['total_pagar_aberto'], 2, ',', '.') ?></div>
             </div>
         </div>
     </div>
@@ -48,7 +48,7 @@ require __DIR__ . '/../layout/sidebar.php';
 </div>
 
 <div class="card border-0 shadow-sm mb-3">
-    <div class="card-header bg-white fw-semibold">Fluxo de Caixa (últimos 6 meses)</div>
+    <div class="card-header bg-white fw-semibold">Fluxo de Caixa Previsto (últimos 6 meses)</div>
     <div class="card-body">
         <canvas id="fluxoChart" height="90"></canvas>
     </div>
@@ -94,7 +94,7 @@ require __DIR__ . '/../layout/sidebar.php';
     </div>
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white fw-semibold">Top 5 Clientes Devedores</div>
+            <div class="card-header bg-white fw-semibold">Top 5 Clientes com Títulos em Aberto</div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-sm align-middle mb-0">
@@ -124,7 +124,7 @@ require __DIR__ . '/../layout/sidebar.php';
         </div>
 
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white fw-semibold">Top 5 Fornecedores</div>
+            <div class="card-header bg-white fw-semibold">Top 5 Fornecedores com Títulos em Aberto</div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-sm align-middle mb-0">

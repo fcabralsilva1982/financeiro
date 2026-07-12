@@ -48,8 +48,8 @@ class ContasReceber {
     public static function criar($dados) {
         $pdo = db();
         $dados['id'] = generate_uuid();
-        $sql = "INSERT INTO contas_receber (id, empresa_id, cliente_id, codigo, descricao, valor_total, data_emissao, data_vencimento, forma_cobranca, status, observacoes)
-                VALUES (:id, :empresa_id, :cliente_id, :codigo, :descricao, :valor_total, :data_emissao, :data_vencimento, :forma_cobranca, :status, :observacoes)";
+        $sql = "INSERT INTO contas_receber (id, empresa_id, cliente_id, codigo, descricao, valor_total, data_emissao, data_vencimento, forma_cobranca, status, observacoes, data_pagamento, valor_pago, forma_recebimento, observacoes_baixa)
+                VALUES (:id, :empresa_id, :cliente_id, :codigo, :descricao, :valor_total, :data_emissao, :data_vencimento, :forma_cobranca, :status, :observacoes, :data_pagamento, :valor_pago, :forma_recebimento, :observacoes_baixa)";
         $params = [
             ':id' => $dados['id'],
             ':empresa_id' => $dados['empresa_id'],
@@ -60,8 +60,12 @@ class ContasReceber {
             ':data_emissao' => $dados['data_emissao'],
             ':data_vencimento' => $dados['data_vencimento'],
             ':forma_cobranca' => $dados['forma_cobranca'],
-            ':status' => $dados['status'] ?? 'rascunho',
-            ':observacoes' => $dados['observacoes'] ?? null
+            ':status' => $dados['status'] ?? 'emitida',
+            ':observacoes' => $dados['observacoes'] ?? null,
+            ':data_pagamento' => null,
+            ':valor_pago' => null,
+            ':forma_recebimento' => null,
+            ':observacoes_baixa' => null,
         ];
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -85,6 +89,72 @@ class ContasReceber {
         ];
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
+    }
+
+    public static function baixar(string $id, string $empresaId, array $dados, string $usuarioId): void
+    {
+        $pdo = db();
+        $conta = self::buscar($id, $empresaId);
+        if (!$conta) {
+            throw new RuntimeException('Conta nao encontrada.');
+        }
+
+        if (in_array((string) $conta['status'], ['paga', 'cancelada'], true)) {
+            throw new RuntimeException('Conta em status que nao permite baixa.');
+        }
+
+        $dataPagamento = trim((string) ($dados['data_pagamento'] ?? ''));
+        $valorPago = (float) ($dados['valor_pago'] ?? 0);
+        if ($dataPagamento === '' || $valorPago <= 0) {
+            throw new RuntimeException('Data e valor pago sao obrigatorios para baixa.');
+        }
+
+        $formaRecebimento = trim((string) ($dados['forma_recebimento'] ?? ''));
+        $formasValidas = ['boleto', 'pix', 'cartao', 'dinheiro', 'transferencia', 'outro'];
+        if (!in_array($formaRecebimento, $formasValidas, true)) {
+            throw new RuntimeException('Forma de recebimento invalida.');
+        }
+
+        $observacoesBaixa = trim((string) ($dados['observacoes_baixa'] ?? ''));
+
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare(
+                "UPDATE contas_receber
+                 SET status = 'paga',
+                     data_pagamento = :data_pagamento,
+                     valor_pago = :valor_pago,
+                     forma_recebimento = :forma_recebimento,
+                     observacoes_baixa = :observacoes_baixa
+                 WHERE id = :id AND empresa_id = :empresa_id"
+            );
+            $stmt->execute([
+                ':id' => $id,
+                ':empresa_id' => $empresaId,
+                ':data_pagamento' => $dataPagamento,
+                ':valor_pago' => $valorPago,
+                ':forma_recebimento' => $formaRecebimento,
+                ':observacoes_baixa' => $observacoesBaixa !== '' ? $observacoesBaixa : null,
+            ]);
+
+            $stmtHistorico = $pdo->prepare(
+                "INSERT INTO contas_receber_historico (id, conta_receber_id, parcela_id, evento, descricao, canal, data_evento, usuario_id)
+                 VALUES (:id, :conta_receber_id, NULL, 'baixa', :descricao, 'sistema', NOW(), :usuario_id)"
+            );
+            $stmtHistorico->execute([
+                ':id' => generate_uuid(),
+                ':conta_receber_id' => $id,
+                ':descricao' => 'Conta baixada como paga',
+                ':usuario_id' => $usuarioId,
+            ]);
+
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     public static function excluir($id, $empresaId) {

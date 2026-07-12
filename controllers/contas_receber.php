@@ -10,7 +10,15 @@ if (!is_logged_in()) {
     redirect(url('login'));
 }
 
+function validar_csrf_contas_receber(): bool
+{
+    $enviado = (string) ($_POST['csrf_token'] ?? '');
+    $sessao = (string) ($_SESSION['csrf_token'] ?? '');
+    return $enviado !== '' && $sessao !== '' && hash_equals($sessao, $enviado);
+}
+
 $empresaId = current_empresa_id();
+$usuarioId = (string) (current_user()['id'] ?? '');
 $action = $_GET['action'] ?? 'index';
 $id = $_GET['id'] ?? null;
 
@@ -69,6 +77,32 @@ switch ($action) {
         ContasReceber::excluir($id, $empresaId);
         set_flash('success', __('contas_receber.sucesso_excluida'));
         redirect(url('contas_receber'));
+        break;
+
+    case 'baixar':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!validar_csrf_contas_receber()) {
+                set_flash('danger', __('common.erro_csrf'));
+                redirect(url('contas_receber'));
+            }
+
+            try {
+                ContasReceber::baixar((string) ($_POST['id'] ?? ''), $empresaId, $_POST, $usuarioId);
+                set_flash('success', __('contas_receber.sucesso_baixada'));
+                redirect(url('contas_receber'));
+            } catch (Throwable $e) {
+                set_flash('danger', $e->getMessage());
+                redirect(url('contas_receber', 'baixar', ['id' => (string) ($_POST['id'] ?? '')]));
+            }
+        }
+
+        $conta = ContasReceber::buscar((string) $id, $empresaId);
+        if (!$conta) {
+            set_flash('danger', __('contas_receber.erro_nao_encontrada'));
+            redirect(url('contas_receber'));
+        }
+
+        require __DIR__ . '/../views/contas_receber/baixar.php';
         break;
 
     default:

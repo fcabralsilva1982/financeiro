@@ -10,29 +10,29 @@ final class Dashboard
         $pdo = db();
 
         $sql = "SELECT
-                    COALESCE(SUM(CASE WHEN status IN ('rascunho','emitida','enviada','visualizada','vencida') THEN valor_total ELSE 0 END), 0) AS total_receber,
+                        COALESCE(SUM(CASE WHEN status IN ('emitida','enviada','visualizada','vencida') THEN valor_total ELSE 0 END), 0) AS total_receber_aberto,
                     COALESCE(SUM(CASE WHEN status = 'vencida' THEN valor_total ELSE 0 END), 0) AS inadimplencia
                 FROM contas_receber
                 WHERE empresa_id = :empresa_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':empresa_id' => $empresaId]);
-        $receber = $stmt->fetch() ?: ['total_receber' => 0, 'inadimplencia' => 0];
+            $receber = $stmt->fetch() ?: ['total_receber_aberto' => 0, 'inadimplencia' => 0];
 
         $sql = "SELECT
-                    COALESCE(SUM(CASE WHEN status IN ('rascunho','pendente_aprovacao','aprovada','parcialmente_paga','vencida') THEN valor_total ELSE 0 END), 0) AS total_pagar
+                        COALESCE(SUM(CASE WHEN status IN ('rascunho','pendente_aprovacao','aprovada','parcialmente_paga','vencida') THEN valor_total ELSE 0 END), 0) AS total_pagar_aberto
                 FROM contas_pagar
                 WHERE empresa_id = :empresa_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':empresa_id' => $empresaId]);
-        $pagar = $stmt->fetch() ?: ['total_pagar' => 0];
+            $pagar = $stmt->fetch() ?: ['total_pagar_aberto' => 0];
 
-        $totalReceber = (float) ($receber['total_receber'] ?? 0);
-        $totalPagar = (float) ($pagar['total_pagar'] ?? 0);
+            $totalReceber = (float) ($receber['total_receber_aberto'] ?? 0);
+            $totalPagar = (float) ($pagar['total_pagar_aberto'] ?? 0);
         $inadimplencia = (float) ($receber['inadimplencia'] ?? 0);
 
         return [
-            'total_receber' => $totalReceber,
-            'total_pagar' => $totalPagar,
+                'total_receber_aberto' => $totalReceber,
+                'total_pagar_aberto' => $totalPagar,
             'saldo_previsto' => $totalReceber - $totalPagar,
             'inadimplencia' => $inadimplencia,
         ];

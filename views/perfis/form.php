@@ -23,7 +23,7 @@ $modulos = [
     'importacao' => __('permissions.modulo_importacao'),
     'categorias' => __('permissions.modulo_categorias'),
 ];
-$acoes = ['visualizar', 'criar', 'editar', 'bloquear', 'excluir'];
+$acoes = ['visualizar', 'criar', 'editar', 'aprovar', 'bloquear', 'excluir'];
 $permissoesAtuais = $perfil['permissoes'] ?? [];
 ?>
 

@@ -316,8 +316,8 @@ final class ContasPagar
             throw new RuntimeException('Conta invalida para aprovacao.');
         }
 
-        if (!empty($conta['criado_por_usuario_id']) && $conta['criado_por_usuario_id'] === $usuarioId) {
-            throw new RuntimeException('Segregacao de funcoes: criador nao pode aprovar a propria conta.');
+        if (!can_user('contas_pagar', 'aprovar')) {
+            throw new RuntimeException('Usuario sem permissao para aprovar conta.');
         }
 
         $stmt = $pdo->prepare(

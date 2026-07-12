@@ -31,7 +31,7 @@ require __DIR__ . '/../layout/sidebar.php';
 
 <form method="post" action="<?= url('contas_receber', 'save') ?>">
     <input type="hidden" name="id" value="<?= e($conta['id'] ?? '') ?>">
-    <input type="hidden" name="status" value="<?= e($conta['status'] ?? 'rascunho') ?>">
+    <input type="hidden" name="status" value="<?= e($conta['status'] ?? 'emitida') ?>">
 
     <div class="form-section">
         <div class="form-section-title"><i class="bi bi-pencil-square me-1"></i>Dados da Cobrança</div>
