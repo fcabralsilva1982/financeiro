@@ -103,9 +103,14 @@ function contar_tentativas_recentes(string $ip, string $email, int $intervaloSeg
     return (int) $stmt->fetchColumn();
 }
 
-function montar_logo_empresa(?string $logo, string $nomeEmpresa): string {
+function montar_logo_empresa(?string $logo, string $nomeEmpresa, string $empresaId = ''): string {
     if (!empty($logo)) {
-        return $logo;
+        if ((str_starts_with($logo, 'http://') || str_starts_with($logo, 'https://'))) {
+            return $logo;
+        }
+        if ($empresaId !== '') {
+            return empresa_logo_url($empresaId);
+        }
     }
 
     $nomeEnc = urlencode($nomeEmpresa);
@@ -115,7 +120,11 @@ function montar_logo_empresa(?string $logo, string $nomeEmpresa): string {
 function aplicar_empresa_na_sessao(array $usuarioBase, array $vinculo, array $vinculosDisponiveis): void {
     session_regenerate_id(true);
 
-    $logoUrl = montar_logo_empresa((string) ($vinculo['empresa_logo'] ?? ''), (string) ($vinculo['empresa_nome'] ?? ''));
+    $logoUrl = montar_logo_empresa(
+        (string) ($vinculo['empresa_logo'] ?? ''),
+        (string) ($vinculo['empresa_nome'] ?? ''),
+        (string) ($vinculo['empresa_id'] ?? '')
+    );
 
     $_SESSION['user'] = [
         'id' => $usuarioBase['id'],
@@ -131,7 +140,11 @@ function aplicar_empresa_na_sessao(array $usuarioBase, array $vinculo, array $vi
     ];
 
     $_SESSION['user_empresas'] = array_map(static function (array $item): array {
-        $item['empresa_logo'] = montar_logo_empresa((string) ($item['empresa_logo'] ?? ''), (string) ($item['empresa_nome'] ?? ''));
+        $item['empresa_logo'] = montar_logo_empresa(
+            (string) ($item['empresa_logo'] ?? ''),
+            (string) ($item['empresa_nome'] ?? ''),
+            (string) ($item['empresa_id'] ?? '')
+        );
         return $item;
     }, $vinculosDisponiveis);
 

@@ -97,6 +97,15 @@ define('SMTP_ENCRYPTION', env('SMTP_ENCRYPTION', 'tls'));
 define('MAIL_FROM_ADDRESS', env('MAIL_FROM_ADDRESS', ''));
 define('MAIL_FROM_NAME', env('MAIL_FROM_NAME', APP_NAME));
 define('VIACEP_API_URL', env('VIACEP_API_URL', 'https://viacep.com.br/ws'));
+define('UPLOAD_STORAGE_PATH', env('UPLOAD_STORAGE_PATH', 'C:/laragon/financeiro_storage'));
+define('UPLOAD_LOGO_MAX_BYTES', (int) env('UPLOAD_LOGO_MAX_BYTES', '2097152'));
+define('UPLOAD_COMPROVANTE_MAX_BYTES', (int) env('UPLOAD_COMPROVANTE_MAX_BYTES', '5242880'));
+define('UPLOAD_RATE_LIMIT_WINDOW_SECONDS', (int) env('UPLOAD_RATE_LIMIT_WINDOW_SECONDS', '900'));
+define('UPLOAD_RATE_LIMIT_MAX_ATTEMPTS', (int) env('UPLOAD_RATE_LIMIT_MAX_ATTEMPTS', '20'));
+define('UPLOAD_AV_SCAN_ENABLED', env('UPLOAD_AV_SCAN_ENABLED', 'false') === 'true');
+define('UPLOAD_AV_SCAN_COMMAND', env('UPLOAD_AV_SCAN_COMMAND', ''));
+define('UPLOAD_AV_FAIL_OPEN', env('UPLOAD_AV_FAIL_OPEN', 'false') === 'true');
+define('UPLOAD_QUARANTINE_PATH', env('UPLOAD_QUARANTINE_PATH', 'C:/laragon/financeiro_storage/quarantine'));
 
 // Mapa de modulos/acoes para evolucao de controle de permissao
 define('PERMISSION_MODULES', [

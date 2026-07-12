@@ -18,6 +18,8 @@ declare(strict_types=1);
  * Acesso restrito: apenas usuários da empresa master (verificado no index.php).
  */
 
+$action = $action ?? ($_GET['action'] ?? 'index');
+
 // ============================================================
 // FUNÇÕES DE CONSULTA
 // ============================================================
@@ -195,58 +197,99 @@ function validar_empresa($dados, $isEdit = false) {
  * Processa o upload de arquivo de logo da empresa.
  *
  * Validações aplicadas:
- *   - Tamanho máximo: 2 MB
- *   - Extensões permitidas: jpg, jpeg, png, svg
- *   - MIME types válidos: image/jpeg, image/png, image/svg+xml
+ *   - Tamanho máximo: constante UPLOAD_LOGO_MAX_BYTES
+ *   - Extensões permitidas: jpg, jpeg, png
+ *   - MIME types válidos: image/jpeg, image/png
+ *   - Arquivo deve ser upload HTTP válido (is_uploaded_file)
  *   - Nome do arquivo é gerado aleatoriamente (16 bytes hex) para segurança
  *
- * Se o upload for válido, remove a logo anterior (se existir) e salva a nova.
+ * Se o upload for válido, remove a logo anterior (se existir) e salva a nova
+ * em storage externo fora do diretório público.
  *
  * @param array  $arquivo   Dados do arquivo ($_FILES['logo']): name, tmp_name, size, error
  * @param string $empresaId UUID da empresa (usado apenas para referência)
  * @param string $logoAtual Caminho relativo da logo atual (para remoção). Vazio se não houver.
- * @return string Caminho relativo da nova logo (ex: 'uploads/logos/abc123.png') ou $logoAtual se upload inválido
+ * @return string Caminho relativo da nova logo (ex: 'logos/abc123.png') ou $logoAtual se upload inválido
  */
 function processar_logo_upload($arquivo, $empresaId, $logoAtual = '') {
+    if (upload_rate_limit_exceeded('logo')) {
+        registrar_tentativa_upload('logo', 'bloqueado_rate_limit');
+        throw new RuntimeException('Limite de tentativas de upload excedido. Tente novamente em alguns minutos.');
+    }
+
     if (empty($arquivo['name']) || $arquivo['error'] !== UPLOAD_ERR_OK) {
         return $logoAtual;
     }
 
-    // Tamanho máximo 2 MB
-    if ($arquivo['size'] > 2 * 1024 * 1024) {
+    if (($arquivo['size'] ?? 0) > UPLOAD_LOGO_MAX_BYTES) {
+        return $logoAtual;
+    }
+
+    $tmpName = (string) ($arquivo['tmp_name'] ?? '');
+    if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+        registrar_tentativa_upload('logo', 'arquivo_invalido');
         return $logoAtual;
     }
 
     // Extensão permitida
     $ext = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
-    if (!in_array($ext, ['jpg', 'jpeg', 'png', 'svg'], true)) {
+    if (!in_array($ext, ['jpg', 'jpeg', 'png'], true)) {
+        registrar_tentativa_upload('logo', 'extensao_nao_permitida');
         return $logoAtual;
     }
 
     // MIME type
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime  = finfo_file($finfo, $arquivo['tmp_name']);
+    $mime  = finfo_file($finfo, $tmpName);
     finfo_close($finfo);
-    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/svg+xml'], true)) {
+    if (!in_array($mime, ['image/jpeg', 'image/png'], true)) {
+        registrar_tentativa_upload('logo', 'mime_nao_permitido');
         return $logoAtual;
     }
 
-    // Diretório
-    $dir = __DIR__ . '/../public/uploads/logos';
+    // Diretório em storage externo
+    $dir = upload_storage_root() . '/logos';
     if (!is_dir($dir)) {
         mkdir($dir, 0755, true);
     }
 
-    // Remover logo anterior local
-    remover_logo_arquivo($logoAtual);
+    $quarantineDir = str_replace('\\', '/', rtrim((string) UPLOAD_QUARANTINE_PATH, '/'));
+    if (!is_dir($quarantineDir)) {
+        mkdir($quarantineDir, 0755, true);
+    }
 
     // Nome aleatório para evitar previsibilidade
     $nomeArquivo = bin2hex(random_bytes(16)) . '.' . $ext;
     $destino = $dir . '/' . $nomeArquivo;
+    $quarantinePath = $quarantineDir . '/q_logo_' . $nomeArquivo;
 
-    if (move_uploaded_file($arquivo['tmp_name'], $destino)) {
-        return 'uploads/logos/' . $nomeArquivo;
+    if (!move_uploaded_file($tmpName, $quarantinePath)) {
+        registrar_tentativa_upload('logo', 'falha_quarentena');
+        return $logoAtual;
     }
+
+    try {
+        scan_uploaded_file_or_fail($quarantinePath, 'logo');
+    } catch (Throwable $e) {
+        if (is_file($quarantinePath)) {
+            unlink($quarantinePath);
+        }
+        registrar_tentativa_upload('logo', 'scan_reprovado');
+        throw $e;
+    }
+
+    if (!rename($quarantinePath, $destino)) {
+        if (is_file($quarantinePath)) {
+            unlink($quarantinePath);
+        }
+        registrar_tentativa_upload('logo', 'falha_movimentacao_final');
+        return $logoAtual;
+    }
+
+    // Remover logo anterior local apenas apos sucesso da nova gravacao
+    remover_logo_arquivo($logoAtual);
+    registrar_tentativa_upload('logo', 'sucesso');
+    return 'logos/' . $nomeArquivo;
 
     return $logoAtual;
 }
@@ -254,17 +297,32 @@ function processar_logo_upload($arquivo, $empresaId, $logoAtual = '') {
 /**
  * Remove o arquivo físico de logo do disco.
  *
- * Verifica se o caminho contém 'uploads/logos/' (segurança contra path traversal)
+ * Verifica e normaliza caminho de logo com controle de diretório seguro.
  * e se o arquivo existe antes de deletar.
  *
- * @param string $logo Caminho relativo da logo (ex: 'uploads/logos/abc123.png')
+ * @param string $logo Caminho relativo da logo (ex: 'logos/abc123.png')
  * @return void
  */
 function remover_logo_arquivo($logo) {
-    if (!empty($logo) && strpos($logo, 'uploads/logos/') !== false) {
-        $caminho = __DIR__ . '/../public/' . $logo;
-        if (file_exists($caminho)) {
-            unlink($caminho);
+    if (empty($logo)) {
+        return;
+    }
+
+    $logoRelativo = normalize_logo_relative_path((string) $logo);
+    if ($logoRelativo !== null) {
+        $caminhoStorage = upload_storage_root() . '/' . $logoRelativo;
+        if (is_file($caminhoStorage)) {
+            unlink($caminhoStorage);
+            return;
+        }
+    }
+
+    // Compatibilidade com logos antigos em public/uploads/logos
+    $logoLegacy = ltrim(str_replace('\\', '/', (string) $logo), '/');
+    if (str_starts_with($logoLegacy, 'uploads/logos/')) {
+        $caminhoLegacy = __DIR__ . '/../public/' . $logoLegacy;
+        if (is_file($caminhoLegacy)) {
+            unlink($caminhoLegacy);
         }
     }
 }
@@ -315,6 +373,86 @@ function salvar_contatos($pdo, $empresaId, $contatos) {
 // ============================================================
 
 switch ($action) {
+    // ----------------------------------------------------------
+    // LOGO (download/stream seguro)
+    // ----------------------------------------------------------
+    case 'logo':
+        $empresaIdLogo = trim((string) ($_GET['id'] ?? ''));
+        if ($empresaIdLogo === '') {
+            http_response_code(400);
+            echo 'Empresa invalida.';
+            exit;
+        }
+
+        if (!can_manage_empresas()) {
+            $permitidas = [
+                (string) current_empresa_id(),
+            ];
+            foreach (user_empresas_disponiveis() as $empresaDisponivel) {
+                $permitidas[] = (string) ($empresaDisponivel['empresa_id'] ?? '');
+            }
+            $permitidas = array_values(array_unique(array_filter($permitidas)));
+
+            if (!in_array($empresaIdLogo, $permitidas, true)) {
+                http_response_code(403);
+                echo 'Acesso negado.';
+                exit;
+            }
+        }
+
+        $empresaLogo = buscar_empresa_por_id($empresaIdLogo);
+        $logoBanco = (string) ($empresaLogo['logo'] ?? '');
+        if ($logoBanco === '') {
+            http_response_code(404);
+            echo 'Logo nao encontrada.';
+            exit;
+        }
+
+        $logoRelativo = normalize_logo_relative_path($logoBanco);
+        $arquivoAbs = false;
+        if ($logoRelativo !== null) {
+            $caminhoStorage = upload_storage_root() . '/' . $logoRelativo;
+            $baseStorage = realpath(upload_storage_root() . '/logos');
+            $arquivoStorage = realpath($caminhoStorage);
+            if ($arquivoStorage !== false && $baseStorage !== false && str_starts_with(str_replace('\\', '/', $arquivoStorage), str_replace('\\', '/', $baseStorage))) {
+                $arquivoAbs = $arquivoStorage;
+            }
+        }
+
+        if ($arquivoAbs === false) {
+            // Compatibilidade com logos antigas em public/uploads/logos
+            $legacyRel = ltrim(str_replace('\\', '/', $logoBanco), '/');
+            $legacyAbs = realpath(__DIR__ . '/../public/' . $legacyRel);
+            $legacyBase = realpath(__DIR__ . '/../public/uploads/logos');
+            if ($legacyAbs !== false && $legacyBase !== false && str_starts_with(str_replace('\\', '/', $legacyAbs), str_replace('\\', '/', $legacyBase))) {
+                $arquivoAbs = $legacyAbs;
+            }
+        }
+
+        if ($arquivoAbs === false || !is_file($arquivoAbs)) {
+            http_response_code(404);
+            echo 'Logo nao encontrada.';
+            exit;
+        }
+
+        $mime = (string) (mime_content_type($arquivoAbs) ?: 'application/octet-stream');
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            http_response_code(415);
+            echo 'Formato de logo nao suportado.';
+            exit;
+        }
+
+        $safeCodigo = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) ($empresaLogo['codigo'] ?? 'empresa'));
+        $nomeArquivo = $safeCodigo === '' ? 'logo_empresa' : 'logo_' . $safeCodigo;
+
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . (string) filesize($arquivoAbs));
+        header('Content-Disposition: inline; filename="' . $nomeArquivo . '"');
+        header('Cache-Control: private, no-store');
+        header('X-Content-Type-Options: nosniff');
+        readfile($arquivoAbs);
+        exit;
+
     // ----------------------------------------------------------
     // CRIAR
     // ----------------------------------------------------------
@@ -367,6 +505,7 @@ switch ($action) {
             break;
         }
 
+        $pdo = null;
         try {
             $pdo = db();
             $pdo->beginTransaction();
@@ -491,7 +630,9 @@ switch ($action) {
             redirect(url('empresas'));
 
         } catch (Exception $ex) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            if ($pdo instanceof PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             log_error('empresas', $isEdit ? 'editar' : 'criar', 'Erro ao salvar empresa: ' . $ex->getMessage());
             set_flash('danger', __('empresas.erro_salvar'));
             redirect(url('empresas'));

@@ -140,6 +140,153 @@ function asset($path) {
 }
 
 /**
+ * Retorna o diretorio raiz de storage externo de uploads.
+ */
+function upload_storage_root(): string
+{
+    $root = str_replace('\\', '/', (string) UPLOAD_STORAGE_PATH);
+    return rtrim($root, '/');
+}
+
+/**
+ * Retorna caminho relativo normalizado para logos no storage externo.
+ * Aceita formato atual (logos/arquivo.png) e legado (uploads/logos/arquivo.png).
+ */
+function normalize_logo_relative_path(string $path): ?string
+{
+    $normalized = ltrim(str_replace('\\', '/', $path), '/');
+    if ($normalized === '') {
+        return null;
+    }
+
+    if (str_starts_with($normalized, 'logos/')) {
+        return $normalized;
+    }
+
+    if (str_starts_with($normalized, 'uploads/logos/')) {
+        return 'logos/' . substr($normalized, strlen('uploads/logos/'));
+    }
+
+    return null;
+}
+
+/**
+ * Retorna caminho relativo normalizado para comprovantes no storage externo.
+ * Aceita formato atual (comprovantes/arquivo.pdf) e legado (uploads/comprovantes/arquivo.pdf).
+ */
+function normalize_comprovante_relative_path(string $path): ?string
+{
+    $normalized = ltrim(str_replace('\\', '/', $path), '/');
+    if ($normalized === '') {
+        return null;
+    }
+
+    if (str_starts_with($normalized, 'comprovantes/')) {
+        return $normalized;
+    }
+
+    if (str_starts_with($normalized, 'uploads/comprovantes/')) {
+        return 'comprovantes/' . substr($normalized, strlen('uploads/comprovantes/'));
+    }
+
+    return null;
+}
+
+/**
+ * Gera URL de exibicao da logo da empresa via endpoint autenticado.
+ */
+function empresa_logo_url(string $empresaId): string
+{
+    return html_entity_decode(url('empresas', 'logo', ['id' => $empresaId]), ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Verifica se o limite de tentativas de upload por IP foi excedido.
+ */
+function upload_rate_limit_exceeded(
+    string $tipo,
+    ?string $ip = null,
+    ?int $windowSeconds = null,
+    ?int $maxAttempts = null
+): bool {
+    $window = $windowSeconds ?? UPLOAD_RATE_LIMIT_WINDOW_SECONDS;
+    $max = $maxAttempts ?? UPLOAD_RATE_LIMIT_MAX_ATTEMPTS;
+    if ($window <= 0 || $max <= 0) {
+        return false;
+    }
+
+    $ipAddr = $ip ?? get_client_ip();
+    $desde = date('Y-m-d H:i:s', time() - $window);
+
+    $pdo = db();
+    $stmt = $pdo->prepare(
+        "SELECT COUNT(*) FROM log_acoes
+         WHERE modulo = 'upload'
+           AND acao = :acao
+           AND ip = :ip
+           AND criado_em >= :desde"
+    );
+    $stmt->execute([
+        ':acao' => 'tentativa_' . $tipo,
+        ':ip' => $ipAddr,
+        ':desde' => $desde,
+    ]);
+
+    return (int) $stmt->fetchColumn() >= $max;
+}
+
+/**
+ * Registra tentativa de upload para trilha de auditoria e rate limit.
+ */
+function registrar_tentativa_upload(string $tipo, string $resultado): void
+{
+    log_info('upload', 'tentativa_' . $tipo, 'Resultado: ' . $resultado);
+}
+
+/**
+ * Executa varredura antivírus no arquivo em quarentena.
+ *
+ * Comando esperado em UPLOAD_AV_SCAN_COMMAND:
+ * - Ex.: clamscan --no-summary {file}
+ * - Se {file} não for informado, o caminho é adicionado no final.
+ */
+function scan_uploaded_file_or_fail(string $filePath, string $tipo): void
+{
+    if (!UPLOAD_AV_SCAN_ENABLED) {
+        return;
+    }
+
+    $template = trim((string) UPLOAD_AV_SCAN_COMMAND);
+    if ($template === '') {
+        throw new RuntimeException('Scanner antivirus de upload nao configurado.');
+    }
+
+    $fileArg = escapeshellarg($filePath);
+    $command = str_contains($template, '{file}')
+        ? str_replace('{file}', $fileArg, $template)
+        : ($template . ' ' . $fileArg);
+
+    $output = [];
+    $exitCode = 0;
+    exec($command . ' 2>&1', $output, $exitCode);
+
+    if ($exitCode === 0) {
+        return;
+    }
+
+    if ($exitCode === 1) {
+        throw new RuntimeException('Arquivo bloqueado por verificacao de seguranca (' . $tipo . ').');
+    }
+
+    if (UPLOAD_AV_FAIL_OPEN) {
+        log_warning('upload', 'scan_indisponivel', 'Scan indisponivel (fail-open ativo): ' . implode(' | ', $output));
+        return;
+    }
+
+    throw new RuntimeException('Falha na verificacao de seguranca do upload.');
+}
+
+/**
  * Retorna a tradução de uma chave no idioma ativo.
  *
  * As traduções são carregadas dos arquivos em lang/ (pt-br.php, en.php).

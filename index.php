@@ -51,7 +51,7 @@ if ($page !== 'login' && is_logged_in() && usuario_deve_aceitar_termos()) {
 }
 
 // Proteção de tenant: empresas só podem ser gerenciadas pela empresa master
-if ($page === 'empresas' && is_logged_in() && !can_manage_empresas()) {
+if ($page === 'empresas' && $action !== 'logo' && is_logged_in() && !can_manage_empresas()) {
     set_flash('danger', __('common.acesso_negado'));
     redirect(url('usuarios'));
 }

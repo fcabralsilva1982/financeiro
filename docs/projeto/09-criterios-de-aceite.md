@@ -107,7 +107,7 @@ Para cada funcionalidade, os cenários são descritos como:
 ### CF-006 — Baixa com upload de comprovante
 - **Dado** parcela de CP com status `pendente` em conta `aprovada`  
 - **Quando** operador registra pagamento e faz upload de PDF (3 MB)  
-- **Então** parcela atualizada para `paga`; arquivo salvo em `uploads/comprovantes/{empresa_id}/`; acesso ao arquivo somente via controller autenticado
+- **Então** parcela atualizada para `paga`; arquivo salvo em storage externo (`C:/laragon/financeiro_storage/comprovantes/`); acesso ao arquivo somente via controller autenticado
 
 ### CE-010 — Upload de arquivo executável
 - **Dado** tentativa de upload de arquivo `.php` como comprovante  

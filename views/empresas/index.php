@@ -75,7 +75,7 @@ require __DIR__ . '/../layout/sidebar.php';
                         <?php
                         $logoUrl = $empresa['logo'] ?? '';
                         if (!empty($logoUrl) && strpos($logoUrl, 'http') !== 0) {
-                            $logoUrl = asset($logoUrl);
+                            $logoUrl = empresa_logo_url((string) ($empresa['id'] ?? ''));
                         }
                         ?>
                         <?php if (!empty($logoUrl)): ?>

@@ -216,7 +216,7 @@ aprovada → cancelada (somente por admin)
 2. Extensões permitidas: `.pdf`, `.jpg`, `.jpeg`, `.png`.
 3. MIME type deve ser validado no servidor (`application/pdf`, `image/jpeg`, `image/png`).
 4. Nome do arquivo salvo deve ser sanitizado (substituir espaços e caracteres especiais) e prefixado com UUID para evitar colisão.
-5. Arquivos salvos em `public/uploads/comprovantes/{empresa_id}/{ano}/{mes}/`.
+5. Arquivos salvos em storage externo (`C:/laragon/financeiro_storage/comprovantes/`) fora do webroot.
 6. Comprovante acessível somente via controller autenticado (`/financeiro/?c=contas_pagar&a=comprovante&id=...`) — nunca via URL direta.
 
 **Exceções:** Nenhuma.

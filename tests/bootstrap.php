@@ -35,6 +35,15 @@ $_ENV['DB_PORT']            = '3306';
 $_ENV['DB_NAME']            = 'financeiro_erp_test';
 $_ENV['DB_USER']            = 'root';
 $_ENV['DB_PASS']            = '';
+$_ENV['UPLOAD_STORAGE_PATH'] = sys_get_temp_dir() . '/financeiro_storage_test';
+$_ENV['UPLOAD_LOGO_MAX_BYTES'] = '2097152';
+$_ENV['UPLOAD_COMPROVANTE_MAX_BYTES'] = '5242880';
+$_ENV['UPLOAD_RATE_LIMIT_WINDOW_SECONDS'] = '900';
+$_ENV['UPLOAD_RATE_LIMIT_MAX_ATTEMPTS'] = '20';
+$_ENV['UPLOAD_AV_SCAN_ENABLED'] = 'false';
+$_ENV['UPLOAD_AV_SCAN_COMMAND'] = '';
+$_ENV['UPLOAD_AV_FAIL_OPEN'] = 'false';
+$_ENV['UPLOAD_QUARANTINE_PATH'] = sys_get_temp_dir() . '/financeiro_storage_test/quarantine';
 
 // Capturar headers para evitar erro "headers already sent"
 ob_start();

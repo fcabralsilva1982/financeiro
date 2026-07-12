@@ -21,7 +21,12 @@ Centralizar parametros sensiveis e gerais em arquivo externo para evitar segredo
 - Seguranca: `BCRYPT_COST`, `SESSION_TIMEOUT`, `APP_SECRET`, `API_TOKEN`.
 - E-mail: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`.
 - API externa: `VIACEP_API_URL`.
+- Uploads: `UPLOAD_STORAGE_PATH`, `UPLOAD_LOGO_MAX_BYTES`, `UPLOAD_COMPROVANTE_MAX_BYTES`.
+- Uploads avançado: `UPLOAD_RATE_LIMIT_WINDOW_SECONDS`, `UPLOAD_RATE_LIMIT_MAX_ATTEMPTS`, `UPLOAD_AV_SCAN_ENABLED`, `UPLOAD_AV_SCAN_COMMAND`, `UPLOAD_AV_FAIL_OPEN`, `UPLOAD_QUARANTINE_PATH`.
 
 ## Observacoes
 - Mantenha este arquivo fora do versionamento.
 - Defina valores reais para os campos de segredo antes de producao.
+- O diretório de uploads seguro deve existir fora do webroot: `C:/laragon/financeiro_storage`.
+- Logos e comprovantes passam a ser gravados em storage externo e servidos por endpoints controlados.
+- Quarentena e scan antivírus podem ser ativados por ambiente com `UPLOAD_AV_SCAN_ENABLED=true` e comando em `UPLOAD_AV_SCAN_COMMAND`.

@@ -379,8 +379,41 @@ class FunctionsTest extends TestCase
     {
         $_SERVER['HTTP_X_FORWARDED_FOR'] = '10.0.0.1, 10.0.0.2';
         $this->assertSame('10.0.0.1', get_client_ip());
-
         unset($_SERVER['HTTP_X_FORWARDED_FOR']);
+    }
+
+
+    // =========================================================
+    // Upload storage helpers
+    // =========================================================
+
+    public function test_upload_storage_root_usa_env_externo(): void
+    {
+        $esperado = rtrim(str_replace('\\', '/', (string) UPLOAD_STORAGE_PATH), '/');
+        $this->assertSame($esperado, upload_storage_root());
+        $this->assertStringContainsString('financeiro_storage_test', upload_storage_root());
+    }
+
+    public function test_normalize_logo_relative_path_aceita_atual_e_legado(): void
+    {
+        $this->assertSame('logos/teste.png', normalize_logo_relative_path('logos/teste.png'));
+        $this->assertSame('logos/teste.png', normalize_logo_relative_path('uploads/logos/teste.png'));
+        $this->assertNull(normalize_logo_relative_path('../etc/passwd'));
+    }
+
+    public function test_normalize_comprovante_relative_path_aceita_atual_e_legado(): void
+    {
+        $this->assertSame('comprovantes/a.pdf', normalize_comprovante_relative_path('comprovantes/a.pdf'));
+        $this->assertSame('comprovantes/a.pdf', normalize_comprovante_relative_path('uploads/comprovantes/a.pdf'));
+        $this->assertNull(normalize_comprovante_relative_path('uploads/logo/a.pdf'));
+    }
+
+    public function test_empresa_logo_url_aponta_para_endpoint_controlado(): void
+    {
+        $url = empresa_logo_url('empresa-123');
+        $this->assertStringContainsString('page=empresas', $url);
+        $this->assertStringContainsString('action=logo', $url);
+        $this->assertStringContainsString('id=empresa-123', $url);
     }
 
     // =========================================================

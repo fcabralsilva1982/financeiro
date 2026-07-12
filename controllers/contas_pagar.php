@@ -20,6 +20,11 @@ function validar_csrf_contas_pagar(): bool
 
 function processar_upload_comprovante(): ?string
 {
+    if (upload_rate_limit_exceeded('comprovante')) {
+        registrar_tentativa_upload('comprovante', 'bloqueado_rate_limit');
+        throw new RuntimeException('Limite de tentativas de upload excedido. Tente novamente em alguns minutos.');
+    }
+
     if (!isset($_FILES['comprovante']) || !is_array($_FILES['comprovante'])) {
         return null;
     }
@@ -32,8 +37,14 @@ function processar_upload_comprovante(): ?string
         throw new RuntimeException('Falha no upload do comprovante.');
     }
 
+    $tamanho = (int) ($_FILES['comprovante']['size'] ?? 0);
+    if ($tamanho <= 0 || $tamanho > UPLOAD_COMPROVANTE_MAX_BYTES) {
+        throw new RuntimeException('Comprovante fora do limite permitido.');
+    }
+
     $tmpName = (string) ($_FILES['comprovante']['tmp_name'] ?? '');
     if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+        registrar_tentativa_upload('comprovante', 'arquivo_invalido');
         throw new RuntimeException('Arquivo de upload invalido.');
     }
 
@@ -47,22 +58,50 @@ function processar_upload_comprovante(): ?string
     ];
 
     if (!isset($permitidos[$mime])) {
+        registrar_tentativa_upload('comprovante', 'mime_nao_permitido');
         throw new RuntimeException('Formato de comprovante nao permitido. Use PDF ou imagem.');
     }
 
-    $destinoDir = __DIR__ . '/../uploads/comprovantes';
+    $destinoDir = upload_storage_root() . '/comprovantes';
     if (!is_dir($destinoDir) && !mkdir($destinoDir, 0775, true) && !is_dir($destinoDir)) {
         throw new RuntimeException('Nao foi possivel preparar diretorio de comprovantes.');
     }
 
+    $quarantineDir = str_replace('\\', '/', rtrim((string) UPLOAD_QUARANTINE_PATH, '/'));
+    if (!is_dir($quarantineDir) && !mkdir($quarantineDir, 0775, true) && !is_dir($quarantineDir)) {
+        throw new RuntimeException('Nao foi possivel preparar diretorio de quarentena.');
+    }
+
     $arquivo = 'cp_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $permitidos[$mime];
     $destinoAbs = $destinoDir . '/' . $arquivo;
+    $quarantineAbs = $quarantineDir . '/q_' . $arquivo;
 
-    if (!move_uploaded_file($tmpName, $destinoAbs)) {
+    if (!move_uploaded_file($tmpName, $quarantineAbs)) {
+        registrar_tentativa_upload('comprovante', 'falha_quarentena');
         throw new RuntimeException('Falha ao salvar comprovante no servidor.');
     }
 
-    return 'uploads/comprovantes/' . $arquivo;
+    try {
+        scan_uploaded_file_or_fail($quarantineAbs, 'comprovante');
+    } catch (Throwable $e) {
+        if (is_file($quarantineAbs)) {
+            unlink($quarantineAbs);
+        }
+        registrar_tentativa_upload('comprovante', 'scan_reprovado');
+        throw $e;
+    }
+
+    if (!rename($quarantineAbs, $destinoAbs)) {
+        if (is_file($quarantineAbs)) {
+            unlink($quarantineAbs);
+        }
+        registrar_tentativa_upload('comprovante', 'falha_movimentacao_final');
+        throw new RuntimeException('Falha ao finalizar armazenamento do comprovante.');
+    }
+
+    registrar_tentativa_upload('comprovante', 'sucesso');
+
+    return 'comprovantes/' . $arquivo;
 }
 
 switch ($action) {
@@ -220,16 +259,25 @@ switch ($action) {
             exit;
         }
 
-        $pathRelativo = str_replace('\\', '/', (string) $parcela['comprovante_path']);
-        if (!str_starts_with($pathRelativo, 'uploads/comprovantes/')) {
+        $pathRelativo = (string) $parcela['comprovante_path'];
+        $pathNormalizado = normalize_comprovante_relative_path($pathRelativo);
+        if ($pathNormalizado === null) {
             http_response_code(403);
             echo 'Acesso negado.';
             exit;
         }
 
-        $arquivoAbs = realpath(__DIR__ . '/../' . $pathRelativo);
-        $baseUploads = realpath(__DIR__ . '/../uploads/comprovantes');
-        if ($arquivoAbs === false || $baseUploads === false || !str_starts_with($arquivoAbs, $baseUploads) || !is_file($arquivoAbs)) {
+        $arquivoAbs = realpath(upload_storage_root() . '/' . $pathNormalizado);
+        $baseUploads = realpath(upload_storage_root() . '/comprovantes');
+
+        // Compatibilidade com comprovantes legados em uploads/comprovantes
+        if ($arquivoAbs === false || $baseUploads === false || !str_starts_with(str_replace('\\', '/', $arquivoAbs), str_replace('\\', '/', $baseUploads))) {
+            $legacyRel = ltrim(str_replace('\\', '/', $pathRelativo), '/');
+            $arquivoAbs = realpath(__DIR__ . '/../' . $legacyRel);
+            $baseUploads = realpath(__DIR__ . '/../uploads/comprovantes');
+        }
+
+        if ($arquivoAbs === false || $baseUploads === false || !str_starts_with(str_replace('\\', '/', $arquivoAbs), str_replace('\\', '/', $baseUploads)) || !is_file($arquivoAbs)) {
             http_response_code(404);
             echo 'Arquivo nao encontrado.';
             exit;

@@ -50,7 +50,7 @@ require __DIR__ . '/../layout/sidebar.php';
                 <?php
                 $logoSrc = $empresa['logo'] ?? '';
                 if (!empty($logoSrc) && strpos($logoSrc, 'http') !== 0) {
-                    $logoSrc = asset($logoSrc);
+                    $logoSrc = empresa_logo_url((string) ($empresa['id'] ?? ''));
                 }
                 if (!empty($logoSrc)): ?>
                     <img src="<?= e($logoSrc) ?>" alt="Logo" class="logo-preview rounded" id="logoPreview">

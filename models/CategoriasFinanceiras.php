@@ -62,7 +62,7 @@ final class CategoriasFinanceiras
         $stmt->execute([
             ':id' => $id,
             ':empresa_id' => $empresaId,
-            ':codigo' => self::gerarCodigo($empresaId),
+            ':codigo' => self::gerarCodigo(),
             ':nome' => trim((string) ($dados['nome'] ?? '')),
             ':tipo' => (string) ($dados['tipo'] ?? 'despesa'),
             ':descricao' => trim((string) ($dados['descricao'] ?? '')) ?: null,
@@ -133,23 +133,16 @@ final class CategoriasFinanceiras
         return $erros;
     }
 
-    private static function gerarCodigo(string $empresaId): string
+    private static function gerarCodigo(): string
     {
         $pdo = db();
         $stmt = $pdo->prepare(
-            "SELECT codigo
+            "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(codigo, '-', -1) AS UNSIGNED)), 0)
              FROM categorias
-             WHERE empresa_id = :empresa_id AND codigo LIKE 'CAT-%'
-             ORDER BY codigo DESC
-             LIMIT 1"
+             WHERE codigo REGEXP '^CAT-[0-9]+$'"
         );
-        $stmt->execute([':empresa_id' => $empresaId]);
-        $ultimo = (string) ($stmt->fetchColumn() ?: '');
-
-        $seq = 1;
-        if ($ultimo !== '' && preg_match('/CAT-(\d+)/', $ultimo, $m) === 1) {
-            $seq = (int) $m[1] + 1;
-        }
+        $stmt->execute();
+        $seq = ((int) $stmt->fetchColumn()) + 1;
 
         return generate_codigo('CAT', $seq);
     }

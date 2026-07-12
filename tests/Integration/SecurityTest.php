@@ -155,6 +155,43 @@ class SecurityTest extends DatabaseTestCase
         }
     }
 
+    public function test_logo_local_usa_endpoint_controlado(): void
+    {
+        $url = montar_logo_empresa('logos/minha-logo.png', 'Empresa X', 'empresa-x');
+        $this->assertStringContainsString('page=empresas', $url);
+        $this->assertStringContainsString('action=logo', $url);
+        $this->assertStringContainsString('id=empresa-x', $url);
+    }
+
+    public function test_logo_http_externa_mantem_url_original(): void
+    {
+        $logo = 'https://cdn.exemplo.com/logo.png';
+        $result = montar_logo_empresa($logo, 'Empresa X', 'empresa-x');
+        $this->assertSame($logo, $result);
+    }
+
+    public function test_upload_rate_limit_excedido_por_ip(): void
+    {
+        $this->loginAsMaster();
+
+        for ($i = 0; $i < 3; $i++) {
+            registrar_log('upload', 'tentativa_logo', 'Teste de rate limit', 'info');
+        }
+
+        $this->assertTrue(upload_rate_limit_exceeded('logo', '127.0.0.1', 900, 3));
+    }
+
+    public function test_upload_rate_limit_nao_excedido_abaixo_do_limite(): void
+    {
+        $this->loginAsMaster();
+
+        for ($i = 0; $i < 2; $i++) {
+            registrar_log('upload', 'tentativa_logo', 'Teste de rate limit', 'info');
+        }
+
+        $this->assertFalse(upload_rate_limit_exceeded('logo', '127.0.0.1', 900, 3));
+    }
+
     // =========================================================
     // SQL Injection — Prepared Statements
     // =========================================================
