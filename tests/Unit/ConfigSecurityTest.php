@@ -52,6 +52,7 @@ class ConfigSecurityTest extends TestCase
     public function test_producao_falha_quando_app_secret_e_padrao(): void
     {
         $result = $this->runConfigInIsolatedProcess([
+            'APP_ENV' => 'production',
             'APP_DEBUG' => 'false',
             'APP_SECRET' => 'change-me',
             'DB_PASS' => 'senha-db-segura',
@@ -64,6 +65,7 @@ class ConfigSecurityTest extends TestCase
     public function test_producao_falha_quando_db_pass_ausente(): void
     {
         $result = $this->runConfigInIsolatedProcess([
+            'APP_ENV' => 'production',
             'APP_DEBUG' => 'false',
             'APP_SECRET' => str_repeat('a', 32),
             'DB_PASS' => '',
@@ -76,6 +78,7 @@ class ConfigSecurityTest extends TestCase
     public function test_producao_falha_quando_smtp_habilitado_sem_senha(): void
     {
         $result = $this->runConfigInIsolatedProcess([
+            'APP_ENV' => 'production',
             'APP_DEBUG' => 'false',
             'APP_SECRET' => str_repeat('b', 32),
             'DB_PASS' => 'senha-db-segura',
@@ -90,6 +93,7 @@ class ConfigSecurityTest extends TestCase
     public function test_producao_falha_quando_api_token_for_obrigatorio_e_ausente(): void
     {
         $result = $this->runConfigInIsolatedProcess([
+            'APP_ENV' => 'production',
             'APP_DEBUG' => 'false',
             'APP_SECRET' => str_repeat('c', 32),
             'DB_PASS' => 'senha-db-segura',
@@ -104,6 +108,7 @@ class ConfigSecurityTest extends TestCase
     public function test_producao_inicializa_quando_requisitos_estao_ok(): void
     {
         $result = $this->runConfigInIsolatedProcess([
+            'APP_ENV' => 'production',
             'APP_DEBUG' => 'false',
             'APP_SECRET' => str_repeat('d', 32),
             'DB_PASS' => 'senha-db-segura',
@@ -111,6 +116,19 @@ class ConfigSecurityTest extends TestCase
             'SMTP_PASS' => 'senha-smtp-segura',
             'API_TOKEN_REQUIRED' => 'true',
             'API_TOKEN' => 'token-seguro',
+        ]);
+
+        $this->assertSame(0, $result['exitCode'], $result['output']);
+        $this->assertStringContainsString('OK', $result['output']);
+    }
+
+    public function test_ambiente_nao_producao_nao_exige_db_pass(): void
+    {
+        $result = $this->runConfigInIsolatedProcess([
+            'APP_ENV' => 'development',
+            'APP_DEBUG' => 'false',
+            'APP_SECRET' => 'change-me',
+            'DB_PASS' => '',
         ]);
 
         $this->assertSame(0, $result['exitCode'], $result['output']);

@@ -25,8 +25,9 @@ Centralizar parametros sensiveis e gerais em arquivo externo para evitar segredo
 - Uploads avançado: `UPLOAD_RATE_LIMIT_WINDOW_SECONDS`, `UPLOAD_RATE_LIMIT_MAX_ATTEMPTS`, `UPLOAD_AV_SCAN_ENABLED`, `UPLOAD_AV_SCAN_COMMAND`, `UPLOAD_AV_FAIL_OPEN`, `UPLOAD_QUARANTINE_PATH`.
 
 ## Regras de seguranca para segredos
-- Em producao (`APP_DEBUG=false`), a inicializacao falha se `APP_SECRET` estiver com valor padrao (`change-me`) ou com menos de 32 caracteres.
-- Em producao (`APP_DEBUG=false`), `DB_PASS` e obrigatorio.
+- A validacao rigida de segredos e aplicada quando `APP_ENV=production` (ou quando `ENFORCE_PROD_SECRETS=true`).
+- Em producao, a inicializacao falha se `APP_SECRET` estiver com valor padrao (`change-me`) ou com menos de 32 caracteres.
+- Em producao, `DB_PASS` e obrigatorio.
 - Em producao, `SMTP_PASS` e obrigatorio quando `SMTP_HOST` estiver configurado ou quando `SMTP_REQUIRED=true`.
 - Em producao, `API_TOKEN` e obrigatorio quando `API_TOKEN_REQUIRED=true`.
 - Gere `APP_SECRET` com entropia alta (minimo recomendado: 32 caracteres aleatorios).
@@ -40,6 +41,7 @@ Exemplo de geracao local (PowerShell):
 
 ## Observacoes
 - Mantenha este arquivo fora do versionamento.
+- Defina explicitamente `APP_ENV=production` no ambiente de producao.
 - Defina valores reais para os campos de segredo antes de producao.
 - O diretório de uploads seguro deve existir fora do webroot: `C:/laragon/financeiro_storage`.
 - Logos e comprovantes passam a ser gravados em storage externo e servidos por endpoints controlados.

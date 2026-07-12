@@ -69,6 +69,7 @@ define('BASE_URL', env('APP_URL', $protocol . '://' . $host . '/financeiro'));
 define('APP_NAME',    env('APP_NAME', 'FinanceiroApp'));
 define('APP_VERSION', env('APP_VERSION', '1.0.0'));
 define('APP_DEBUG',   env('APP_DEBUG', 'false') === 'true');
+define('APP_ENV', strtolower((string) env('APP_ENV', 'development')));
 
 // Custo do bcrypt para password_hash (10-12 recomendado, 12 = mais seguro)
 define('BCRYPT_COST', (int) env('BCRYPT_COST', '12'));
@@ -107,7 +108,8 @@ define('UPLOAD_AV_SCAN_COMMAND', env('UPLOAD_AV_SCAN_COMMAND', ''));
 define('UPLOAD_AV_FAIL_OPEN', env('UPLOAD_AV_FAIL_OPEN', 'false') === 'true');
 define('UPLOAD_QUARANTINE_PATH', env('UPLOAD_QUARANTINE_PATH', 'C:/laragon/financeiro_storage/quarantine'));
 
-if (!APP_DEBUG) {
+$enforceProdSecrets = APP_ENV === 'production' || env('ENFORCE_PROD_SECRETS', 'false') === 'true';
+if ($enforceProdSecrets) {
     $requiredSecrets = [
         'APP_SECRET' => [
             'value' => APP_SECRET,
