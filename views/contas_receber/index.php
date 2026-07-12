@@ -53,8 +53,8 @@ require __DIR__ . '/../layout/sidebar.php';
     </div>
 </form>
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
+<div class="table-responsive contas-pagar-lista-borda rounded">
+    <table class="table table-hover align-middle table-striped">
         <thead class="table-light">
             <tr>
                 <th style="width: 115px;"><?= e(__('contas_receber.codigo')) ?></th>

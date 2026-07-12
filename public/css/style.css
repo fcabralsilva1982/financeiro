@@ -242,6 +242,17 @@ html {
     margin-bottom: 1rem;
 }
 
+/* --- Delimitação visual da listagem de Contas a Pagar --- */
+.contas-pagar-lista-borda {
+    border: 1px solid #dfe3e8;
+    background: #fff;
+    padding: 0.25rem;
+}
+
+.contas-pagar-lista-borda > .table {
+    margin-bottom: 0;
+}
+
 /* --- Sidebar overlay (mobile) --- */
 .sidebar-overlay {
     display: none;
@@ -457,6 +468,11 @@ html {
     .contato-row {
         background-color: #212529 !important;
         border-color: #343a40 !important;
+    }
+
+    .contas-pagar-lista-borda {
+        border-color: #495057;
+        background: #212529;
     }
 
     .table-logo-placeholder {
