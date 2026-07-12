@@ -253,6 +253,52 @@ html {
     margin-bottom: 0;
 }
 
+/* --- Upload de documentos do cliente --- */
+.document-upload-row {
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.document-upload-row > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.document-upload-input {
+    min-height: 38px;
+}
+
+.document-upload-row .form-label,
+.document-upload-row .form-text {
+    text-align: center;
+    max-width: 100%;
+    min-height: 2.5rem;
+}
+
+.document-upload-action {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    text-align: center;
+}
+
+.document-upload-button {
+    min-width: 180px;
+}
+
+@media (max-width: 767.98px) {
+    .document-upload-action {
+        justify-content: center;
+    }
+
+    .document-upload-button {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
 /* --- Sidebar overlay (mobile) --- */
 .sidebar-overlay {
     display: none;
@@ -465,6 +511,10 @@ html {
         color: #6c757d;
     }
 
+    .document-upload-row .form-text {
+        color: #adb5bd;
+    }
+
     .contato-row {
         background-color: #212529 !important;
         border-color: #343a40 !important;
@@ -473,6 +523,27 @@ html {
     .contas-pagar-lista-borda {
         border-color: #495057;
         background: #212529;
+    }
+
+
+@media (max-width: 767.98px) {
+    .document-upload-row > [class*="col-"] {
+        align-items: stretch;
+        text-align: left;
+    }
+
+    .document-upload-row .form-label,
+    .document-upload-row .form-text {
+        text-align: left;
+    }
+
+    .document-upload-button {
+        width: 100%;
+        min-width: 0;
+    }
+}
+    .document-upload-row .form-text {
+        color: #adb5bd;
     }
 
     .table-logo-placeholder {

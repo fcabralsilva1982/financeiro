@@ -73,6 +73,8 @@
 | RF-024 | Dashboard deve exibir gráfico de barras com fluxo de caixa mensal dos últimos 6 meses (entradas x saídas por mês). | Alta | Entrevista | Gráfico renderizado no front-end com dados da API interna; meses sem movimento exibem valor zero |
 | RF-025 | Dashboard deve listar contas vencendo nos próximos 7 dias (a receber e a pagar), com link direto para o registro. | Alta | Entrevista | Lista ordenada por vencimento; máximo de 10 itens exibidos; link aponta para edição do registro |
 | RF-026 | Dashboard deve exibir os 5 clientes com maior saldo devedor em aberto e os 5 fornecedores com maior valor a pagar. | Média | Entrevista | Rankings calculados via query com GROUP BY; clientes/fornecedores inativos excluídos |
+| RF-027 | O cadastro de clientes deve permitir anexar documentos como RG, CPF e Cartão CNPJ após o registro inicial, com visualização, download e exclusão controlada. | Média | Operacional | Documentos salvos em storage externo; listados no cadastro do cliente; download e exclusão disponíveis apenas para a empresa dona do registro |
+| RF-028 | O cadastro de fornecedores deve permitir anexar documentos cadastrais e fiscais após o registro inicial, com visualização, download e exclusão controlada. | Média | Operacional | Documentos salvos em storage externo; listados no cadastro do fornecedor; download e exclusão disponíveis apenas para a empresa dona do registro |
 
 ---
 

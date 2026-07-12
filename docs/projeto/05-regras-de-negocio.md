@@ -222,3 +222,33 @@ aprovada → cancelada (somente por admin)
 **Exceções:** Nenhuma.
 
 **Impacto em dados/processo:** Upload inválido retorna erro HTTP 422; nenhum arquivo é salvo em caso de erro.
+
+---
+
+## RN-014 — Documentos de Clientes
+
+**Contexto:** O cadastro do cliente pode manter documentos cadastrais anexos, como RG, CPF e Cartão CNPJ.
+
+**Regra:**
+1. Upload liberado somente para clientes já cadastrados.
+2. Tipos permitidos: PDF, JPG, JPEG, PNG e WEBP.
+3. Arquivos devem ser gravados fora do webroot, em storage externo controlado.
+4. Download e exclusão devem respeitar o tenant da empresa dona do cliente.
+5. Um cliente pode ter múltiplos documentos anexados.
+
+**Impacto em dados/processo:** Documentos ficam disponíveis dentro do cadastro do cliente para consulta e manutenção.
+
+---
+
+## RN-015 — Documentos de Fornecedores
+
+**Contexto:** O cadastro do fornecedor pode manter documentos cadastrais, fiscais e operacionais anexos.
+
+**Regra:**
+1. Upload liberado somente para fornecedores já cadastrados.
+2. Tipos permitidos: PDF, JPG, JPEG, PNG e WEBP.
+3. Arquivos devem ser gravados fora do webroot, em storage externo controlado.
+4. Download e exclusão devem respeitar o tenant da empresa dona do fornecedor.
+5. Um fornecedor pode ter múltiplos documentos anexados.
+
+**Impacto em dados/processo:** Documentos ficam disponíveis dentro do cadastro do fornecedor para consulta e manutenção.

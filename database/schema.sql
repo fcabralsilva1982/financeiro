@@ -34,6 +34,7 @@ CREATE TABLE `contas_receber` (
     `data_pagamento`    DATE          NULL COMMENT 'Data de pagamento',
     `valor_pago`        DECIMAL(15,2) NULL COMMENT 'Valor efetivamente recebido',
     `forma_recebimento` ENUM('boleto','pix','cartao','dinheiro','transferencia','outro') NULL COMMENT 'Forma de recebimento',
+    `comprovante_path`  VARCHAR(500)  NULL COMMENT 'Caminho relativo do comprovante de recebimento',
     `observacoes_baixa` TEXT          NULL COMMENT 'Observações da baixa',
     `observacoes`       TEXT          NULL,
     `criado_em`         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -455,6 +456,32 @@ CREATE TABLE `clientes` (
   COMMENT='Cadastro de clientes (PF e PJ) com dados de cobrança';
 
 -- ============================================================
+-- 8.1 DOCUMENTOS DOS CLIENTES
+-- ============================================================
+CREATE TABLE `cliente_documentos` (
+    `id`                CHAR(36)        NOT NULL COMMENT 'UUID',
+    `cliente_id`        CHAR(36)        NOT NULL COMMENT 'Cliente vinculado',
+    `empresa_id`        CHAR(36)        NOT NULL COMMENT 'Tenant — empresa dona do cliente',
+    `tipo_documento`    ENUM('rg','cpf','cnh','comprovante_residencia','cartao_cnpj','contrato_social','inscricao_estadual','procuracao','foto_frente','foto_verso','outro') NOT NULL DEFAULT 'outro' COMMENT 'Tipo do documento anexado',
+    `nome_original`     VARCHAR(255)    NOT NULL COMMENT 'Nome original do arquivo enviado',
+    `arquivo_path`      VARCHAR(500)    NOT NULL COMMENT 'Caminho relativo do arquivo no storage externo',
+    `mime_type`         VARCHAR(100)    NOT NULL COMMENT 'MIME type validado do arquivo',
+    `tamanho_bytes`     BIGINT          NOT NULL COMMENT 'Tamanho do arquivo em bytes',
+    `criado_em`         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_cliente_documentos_cliente` (`cliente_id`),
+    INDEX `idx_cliente_documentos_empresa` (`empresa_id`),
+    INDEX `idx_cliente_documentos_tipo` (`tipo_documento`),
+    CONSTRAINT `fk_cliente_documentos_cliente`
+        FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_cliente_documentos_empresa`
+        FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Documentos anexados aos clientes';
+
+-- ============================================================
 -- 9. FORNECEDORES
 -- ============================================================
 CREATE TABLE `fornecedores` (
@@ -497,6 +524,32 @@ CREATE TABLE `fornecedores` (
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Cadastro de fornecedores com dados bancários para pagamento';
+
+-- ============================================================
+-- 9.1 DOCUMENTOS DOS FORNECEDORES
+-- ============================================================
+CREATE TABLE `fornecedor_documentos` (
+    `id`                CHAR(36)        NOT NULL COMMENT 'UUID',
+    `fornecedor_id`     CHAR(36)        NOT NULL COMMENT 'Fornecedor vinculado',
+    `empresa_id`        CHAR(36)        NOT NULL COMMENT 'Tenant — empresa dona do fornecedor',
+    `tipo_documento`    ENUM('rg','cpf','cnh','comprovante_residencia','cartao_cnpj','contrato_social','inscricao_estadual','procuracao','foto_frente','foto_verso','outro') NOT NULL DEFAULT 'outro' COMMENT 'Tipo do documento anexado',
+    `nome_original`     VARCHAR(255)    NOT NULL COMMENT 'Nome original do arquivo enviado',
+    `arquivo_path`      VARCHAR(500)    NOT NULL COMMENT 'Caminho relativo do arquivo no storage externo',
+    `mime_type`         VARCHAR(100)    NOT NULL COMMENT 'MIME type validado do arquivo',
+    `tamanho_bytes`     BIGINT          NOT NULL COMMENT 'Tamanho do arquivo em bytes',
+    `criado_em`         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_fornecedor_documentos_fornecedor` (`fornecedor_id`),
+    INDEX `idx_fornecedor_documentos_empresa` (`empresa_id`),
+    INDEX `idx_fornecedor_documentos_tipo` (`tipo_documento`),
+    CONSTRAINT `fk_fornecedor_documentos_fornecedor`
+        FOREIGN KEY (`fornecedor_id`) REFERENCES `fornecedores` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_fornecedor_documentos_empresa`
+        FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Documentos anexados aos fornecedores';
 
 
 -- ============================================================

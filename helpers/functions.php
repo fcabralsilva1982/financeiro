@@ -193,6 +193,40 @@ function normalize_comprovante_relative_path(string $path): ?string
 }
 
 /**
+ * Retorna caminho relativo normalizado para documentos de clientes.
+ */
+function normalize_cliente_document_relative_path(string $path): ?string
+{
+    $normalized = ltrim(str_replace('\\', '/', $path), '/');
+    if ($normalized === '') {
+        return null;
+    }
+
+    if (str_starts_with($normalized, 'cliente_documentos/')) {
+        return $normalized;
+    }
+
+    return null;
+}
+
+/**
+ * Retorna caminho relativo normalizado para documentos de fornecedores.
+ */
+function normalize_fornecedor_document_relative_path(string $path): ?string
+{
+    $normalized = ltrim(str_replace('\\', '/', $path), '/');
+    if ($normalized === '') {
+        return null;
+    }
+
+    if (str_starts_with($normalized, 'fornecedor_documentos/')) {
+        return $normalized;
+    }
+
+    return null;
+}
+
+/**
  * Gera URL de exibicao da logo da empresa via endpoint autenticado.
  */
 function empresa_logo_url(string $empresaId): string

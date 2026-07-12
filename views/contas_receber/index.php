@@ -1,5 +1,8 @@
 <?php
 $pageTitle = __('contas_receber.title');
+$clientes = $clientes ?? [];
+$contas = $contas ?? [];
+$filtros = $filtros ?? [];
 require __DIR__ . '/../layout/header.php';
 require __DIR__ . '/../layout/sidebar.php';
 ?>
@@ -84,6 +87,9 @@ require __DIR__ . '/../layout/sidebar.php';
                             <a href="<?= url('contas_receber', 'edit', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-primary btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
                             <?php if (!in_array((string) $conta['status'], ['paga', 'cancelada'], true)): ?>
                                 <a href="<?= url('contas_receber', 'baixar', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-success btn-action" title="Dar baixa"><i class="bi bi-cash-coin"></i></a>
+                            <?php endif; ?>
+                            <?php if ((string) ($conta['status'] ?? '') === 'paga' && !empty($conta['comprovante_path'])): ?>
+                                <a href="<?= url('contas_receber', 'download_comprovante', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-dark btn-action" title="Comprovante"><i class="bi bi-paperclip"></i></a>
                             <?php endif; ?>
                             <a href="<?= url('contas_receber', 'delete', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-danger btn-action" title="Excluir" onclick="return confirm('<?= e(__('contas_receber.confirmar_exclusao')) ?>')"><i class="bi bi-trash"></i></a>
                         </td>

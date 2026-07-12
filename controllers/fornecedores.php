@@ -19,6 +19,10 @@ declare(strict_types=1);
  * Multi-tenancy: registros filtrados por empresa_id do usuário logado.
  */
 
+require_once __DIR__ . '/../helpers/functions.php';
+
+$action = $action ?? ($_GET['action'] ?? 'index');
+
 // ============================================================
 // FUNÇÕES DE CONSULTA
 // ============================================================
@@ -176,6 +180,149 @@ function validar_fornecedor($dados, $isEdit = false) {
     return $erros;
 }
 
+function listar_documentos_fornecedor(string $fornecedorId): array {
+    $pdo = db();
+    $stmt = $pdo->prepare(
+        "SELECT id, fornecedor_id, empresa_id, tipo_documento, nome_original, arquivo_path, mime_type, tamanho_bytes, criado_em
+         FROM fornecedor_documentos
+         WHERE fornecedor_id = :fornecedor_id AND empresa_id = :empresa_id
+         ORDER BY criado_em DESC"
+    );
+    $stmt->execute([
+        ':fornecedor_id' => $fornecedorId,
+        ':empresa_id' => current_empresa_id(),
+    ]);
+    return $stmt->fetchAll();
+}
+
+function processar_upload_documento_fornecedor(string $fornecedorId): ?array {
+    if (upload_rate_limit_exceeded('fornecedor_documento')) {
+        registrar_tentativa_upload('fornecedor_documento', 'bloqueado_rate_limit');
+        throw new RuntimeException('Limite de tentativas de upload excedido. Tente novamente em alguns minutos.');
+    }
+
+    if (!isset($_FILES['documento']) || !is_array($_FILES['documento'])) {
+        return null;
+    }
+
+    if ((int) ($_FILES['documento']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    if ((int) ($_FILES['documento']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        throw new RuntimeException('Falha no upload do documento.');
+    }
+
+    $tamanho = (int) ($_FILES['documento']['size'] ?? 0);
+    if ($tamanho <= 0 || $tamanho > UPLOAD_COMPROVANTE_MAX_BYTES) {
+        throw new RuntimeException('Documento fora do limite permitido.');
+    }
+
+    $tmpName = (string) ($_FILES['documento']['tmp_name'] ?? '');
+    if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+        registrar_tentativa_upload('fornecedor_documento', 'arquivo_invalido');
+        throw new RuntimeException('Arquivo de upload invalido.');
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = (string) $finfo->file($tmpName);
+    $permitidos = [
+        'application/pdf' => 'pdf',
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+    ];
+
+    if (!isset($permitidos[$mime])) {
+        registrar_tentativa_upload('fornecedor_documento', 'mime_nao_permitido');
+        throw new RuntimeException('Formato de documento nao permitido. Use PDF ou imagem.');
+    }
+
+    $destinoDir = upload_storage_root() . '/fornecedor_documentos';
+    if (!is_dir($destinoDir) && !mkdir($destinoDir, 0775, true) && !is_dir($destinoDir)) {
+        throw new RuntimeException('Nao foi possivel preparar diretorio de documentos do fornecedor.');
+    }
+
+    $quarantineDir = str_replace('\\', '/', rtrim((string) UPLOAD_QUARANTINE_PATH, '/'));
+    if (!is_dir($quarantineDir) && !mkdir($quarantineDir, 0775, true) && !is_dir($quarantineDir)) {
+        throw new RuntimeException('Nao foi possivel preparar diretorio de quarentena.');
+    }
+
+    $arquivo = 'for_' . preg_replace('/[^a-zA-Z0-9]/', '', $fornecedorId) . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $permitidos[$mime];
+    $destinoAbs = $destinoDir . '/' . $arquivo;
+    $quarantineAbs = $quarantineDir . '/q_' . $arquivo;
+
+    if (!move_uploaded_file($tmpName, $quarantineAbs)) {
+        registrar_tentativa_upload('fornecedor_documento', 'falha_quarentena');
+        throw new RuntimeException('Falha ao salvar documento no servidor.');
+    }
+
+    try {
+        scan_uploaded_file_or_fail($quarantineAbs, 'fornecedor_documento');
+    } catch (Throwable $e) {
+        if (is_file($quarantineAbs)) {
+            unlink($quarantineAbs);
+        }
+        registrar_tentativa_upload('fornecedor_documento', 'scan_reprovado');
+        throw $e;
+    }
+
+    if (!rename($quarantineAbs, $destinoAbs)) {
+        if (is_file($quarantineAbs)) {
+            unlink($quarantineAbs);
+        }
+        registrar_tentativa_upload('fornecedor_documento', 'falha_movimentacao_final');
+        throw new RuntimeException('Falha ao finalizar armazenamento do documento.');
+    }
+
+    registrar_tentativa_upload('fornecedor_documento', 'sucesso');
+
+    return [
+        'tipo_documento' => (string) ($_POST['tipo_documento'] ?? 'outro'),
+        'nome_original' => (string) ($_FILES['documento']['name'] ?? $arquivo),
+        'arquivo_path' => 'fornecedor_documentos/' . $arquivo,
+        'mime_type' => $mime,
+        'tamanho_bytes' => $tamanho,
+    ];
+}
+
+function salvar_documento_fornecedor(string $fornecedorId, array $documento): void {
+    $tiposValidos = ['rg', 'cpf', 'cnh', 'comprovante_residencia', 'cartao_cnpj', 'contrato_social', 'inscricao_estadual', 'procuracao', 'foto_frente', 'foto_verso', 'outro'];
+    $tipoDocumento = in_array($documento['tipo_documento'] ?? '', $tiposValidos, true)
+        ? $documento['tipo_documento']
+        : 'outro';
+
+    $pdo = db();
+    $stmt = $pdo->prepare(
+        "INSERT INTO fornecedor_documentos
+            (id, fornecedor_id, empresa_id, tipo_documento, nome_original, arquivo_path, mime_type, tamanho_bytes)
+         VALUES
+            (:id, :fornecedor_id, :empresa_id, :tipo_documento, :nome_original, :arquivo_path, :mime_type, :tamanho_bytes)"
+    );
+    $stmt->execute([
+        ':id' => generate_uuid(),
+        ':fornecedor_id' => $fornecedorId,
+        ':empresa_id' => current_empresa_id(),
+        ':tipo_documento' => $tipoDocumento,
+        ':nome_original' => $documento['nome_original'],
+        ':arquivo_path' => $documento['arquivo_path'],
+        ':mime_type' => $documento['mime_type'],
+        ':tamanho_bytes' => $documento['tamanho_bytes'],
+    ]);
+}
+
+function excluir_arquivo_documento_fornecedor(string $arquivoPath): void {
+    $relativo = normalize_fornecedor_document_relative_path($arquivoPath);
+    if ($relativo === null) {
+        return;
+    }
+
+    $abs = upload_storage_root() . '/' . $relativo;
+    if (is_file($abs)) {
+        unlink($abs);
+    }
+}
+
 // ============================================================
 // ROTEAMENTO
 // ============================================================
@@ -188,6 +335,7 @@ switch ($action) {
         $fornecedor = null;
         $isEdit  = false;
         $errors  = [];
+        $documentosFornecedor = [];
         require __DIR__ . '/../views/fornecedores/form.php';
         break;
 
@@ -207,6 +355,7 @@ switch ($action) {
         }
         $isEdit = true;
         $errors = [];
+        $documentosFornecedor = listar_documentos_fornecedor((string) $id);
         require __DIR__ . '/../views/fornecedores/form.php';
         break;
 
@@ -228,10 +377,14 @@ switch ($action) {
 
         if (!empty($errors)) {
             $fornecedor = $dados;
+            $documentosFornecedor = ($isEdit && !empty($dados['id']))
+                ? listar_documentos_fornecedor((string) $dados['id'])
+                : [];
             require __DIR__ . '/../views/fornecedores/form.php';
             break;
         }
 
+        $pdo = null;
         try {
             $pdo = db();
             $pdo->beginTransaction();
@@ -347,11 +500,128 @@ switch ($action) {
             redirect(url('fornecedores'));
 
         } catch (Exception $ex) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            if ($pdo instanceof PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             log_error('fornecedores', $isEdit ? 'editar' : 'criar', 'Erro ao salvar fornecedor: ' . $ex->getMessage());
             set_flash('danger', __('fornecedores.erro_salvar'));
             redirect(url('fornecedores'));
         }
+        break;
+
+    case 'upload_documento':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(url('fornecedores'));
+        }
+        if (!validar_csrf_fornecedores()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('fornecedores'));
+        }
+
+        $fornecedorId = (string) ($_POST['fornecedor_id'] ?? '');
+        $fornecedor = $fornecedorId !== '' ? buscar_fornecedor_por_id($fornecedorId) : null;
+        if (!$fornecedor) {
+            set_flash('danger', __('fornecedores.erro_nao_encontrado'));
+            redirect(url('fornecedores'));
+        }
+
+        try {
+            $documento = processar_upload_documento_fornecedor($fornecedorId);
+            if ($documento === null) {
+                throw new RuntimeException('Selecione um documento para enviar.');
+            }
+            salvar_documento_fornecedor($fornecedorId, $documento);
+            set_flash('success', 'Documento enviado com sucesso.');
+        } catch (Throwable $e) {
+            set_flash('danger', $e->getMessage());
+        }
+        redirect(url('fornecedores', 'edit', ['id' => $fornecedorId]));
+        break;
+
+    case 'download_documento':
+        $documentoId = (string) ($_GET['documento_id'] ?? '');
+        if ($documentoId === '') {
+            http_response_code(404);
+            echo 'Documento nao encontrado.';
+            exit;
+        }
+
+        $pdo = db();
+        $stmt = $pdo->prepare(
+            "SELECT id, fornecedor_id, empresa_id, nome_original, arquivo_path, mime_type
+             FROM fornecedor_documentos
+             WHERE id = :id AND empresa_id = :empresa_id
+             LIMIT 1"
+        );
+        $stmt->execute([':id' => $documentoId, ':empresa_id' => current_empresa_id()]);
+        $documento = $stmt->fetch();
+        if (!$documento) {
+            http_response_code(404);
+            echo 'Documento nao encontrado.';
+            exit;
+        }
+
+        $relativo = normalize_fornecedor_document_relative_path((string) $documento['arquivo_path']);
+        if ($relativo === null) {
+            http_response_code(403);
+            echo 'Acesso negado.';
+            exit;
+        }
+
+        $arquivoAbs = realpath(upload_storage_root() . '/' . $relativo);
+        $base = realpath(upload_storage_root() . '/fornecedor_documentos');
+        if ($arquivoAbs === false || $base === false || !str_starts_with(str_replace('\\', '/', $arquivoAbs), str_replace('\\', '/', $base)) || !is_file($arquivoAbs)) {
+            http_response_code(404);
+            echo 'Arquivo nao encontrado.';
+            exit;
+        }
+
+        header('Content-Type: ' . ((string) ($documento['mime_type'] ?? 'application/octet-stream')));
+        header('Content-Length: ' . (string) filesize($arquivoAbs));
+        header('Content-Disposition: attachment; filename="' . basename((string) $documento['nome_original']) . '"');
+        header('X-Content-Type-Options: nosniff');
+        readfile($arquivoAbs);
+        exit;
+
+    case 'delete_documento':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect(url('fornecedores'));
+        }
+        if (!validar_csrf_fornecedores()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('fornecedores'));
+        }
+
+        $documentoId = (string) ($_POST['documento_id'] ?? '');
+        $fornecedorId = (string) ($_POST['fornecedor_id'] ?? '');
+        if ($documentoId === '' || $fornecedorId === '') {
+            set_flash('danger', 'Documento nao encontrado.');
+            redirect(url('fornecedores'));
+        }
+
+        $pdo = db();
+        $stmt = $pdo->prepare(
+            "SELECT id, arquivo_path
+             FROM fornecedor_documentos
+             WHERE id = :id AND empresa_id = :empresa_id AND fornecedor_id = :fornecedor_id
+             LIMIT 1"
+        );
+        $stmt->execute([
+            ':id' => $documentoId,
+            ':empresa_id' => current_empresa_id(),
+            ':fornecedor_id' => $fornecedorId,
+        ]);
+        $documento = $stmt->fetch();
+        if (!$documento) {
+            set_flash('danger', 'Documento nao encontrado.');
+            redirect(url('fornecedores', 'edit', ['id' => $fornecedorId]));
+        }
+
+        $pdo->prepare('DELETE FROM fornecedor_documentos WHERE id = :id AND empresa_id = :empresa_id')
+            ->execute([':id' => $documentoId, ':empresa_id' => current_empresa_id()]);
+        excluir_arquivo_documento_fornecedor((string) $documento['arquivo_path']);
+        set_flash('success', 'Documento excluido com sucesso.');
+        redirect(url('fornecedores', 'edit', ['id' => $fornecedorId]));
         break;
 
     // ----------------------------------------------------------

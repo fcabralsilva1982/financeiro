@@ -1,5 +1,6 @@
 <?php
 $pageTitle = 'Dar Baixa no Recebimento';
+$conta = $conta ?? [];
 require __DIR__ . '/../layout/header.php';
 require __DIR__ . '/../layout/sidebar.php';
 ?>
@@ -18,7 +19,7 @@ require __DIR__ . '/../layout/sidebar.php';
         <p class="mb-1"><strong>Vencimento:</strong> <?= e(date_fmt((string) $conta['data_vencimento'])) ?></p>
         <p class="mb-3"><strong>Valor em Aberto:</strong> R$ <?= number_format((float) $conta['valor_total'], 2, ',', '.') ?></p>
 
-        <form action="<?= url('contas_receber', 'baixar') ?>" method="POST">
+        <form action="<?= url('contas_receber', 'baixar') ?>" method="POST" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= e((string) $conta['id']) ?>">
 
@@ -38,6 +39,11 @@ require __DIR__ . '/../layout/sidebar.php';
                             <option value="<?= e($opcao) ?>"><?= e(strtoupper($opcao)) ?></option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="comprovante" class="form-label">Comprovante</label>
+                    <input type="file" id="comprovante" name="comprovante" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                    <div class="form-text">PDF ou imagem (JPG/PNG/WEBP).</div>
                 </div>
                 <div class="col-12">
                     <label for="observacoes_baixa" class="form-label">Observações da Baixa</label>

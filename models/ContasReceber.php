@@ -116,6 +116,7 @@ class ContasReceber {
         }
 
         $observacoesBaixa = trim((string) ($dados['observacoes_baixa'] ?? ''));
+        $comprovantePath = $dados['comprovante_path'] ?? null;
 
         $pdo->beginTransaction();
         try {
@@ -125,6 +126,7 @@ class ContasReceber {
                      data_pagamento = :data_pagamento,
                      valor_pago = :valor_pago,
                      forma_recebimento = :forma_recebimento,
+                     comprovante_path = :comprovante_path,
                      observacoes_baixa = :observacoes_baixa
                  WHERE id = :id AND empresa_id = :empresa_id"
             );
@@ -134,6 +136,7 @@ class ContasReceber {
                 ':data_pagamento' => $dataPagamento,
                 ':valor_pago' => $valorPago,
                 ':forma_recebimento' => $formaRecebimento,
+                ':comprovante_path' => $comprovantePath,
                 ':observacoes_baixa' => $observacoesBaixa !== '' ? $observacoesBaixa : null,
             ]);
 

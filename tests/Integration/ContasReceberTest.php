@@ -56,6 +56,7 @@ class ContasReceberTest extends DatabaseTestCase
                 data_pagamento DATE NULL,
                 valor_pago DECIMAL(15,2) NULL,
                 forma_recebimento VARCHAR(30) NULL,
+                comprovante_path VARCHAR(500) NULL,
                 observacoes_baixa TEXT NULL,
                 observacoes TEXT NULL,
                 PRIMARY KEY (id),
@@ -161,10 +162,11 @@ class ContasReceberTest extends DatabaseTestCase
             'data_pagamento' => '2026-07-13',
             'valor_pago' => '250.00',
             'forma_recebimento' => 'pix',
+            'comprovante_path' => 'comprovantes/cr_teste.pdf',
             'observacoes_baixa' => 'Pago via PIX',
         ], 'usuario-teste');
 
-        $stmt = $this->db()->prepare('SELECT status, data_pagamento, valor_pago, forma_recebimento, observacoes_baixa FROM contas_receber WHERE id = :id LIMIT 1');
+        $stmt = $this->db()->prepare('SELECT status, data_pagamento, valor_pago, forma_recebimento, comprovante_path, observacoes_baixa FROM contas_receber WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $contaId]);
         $conta = $stmt->fetch();
 
@@ -173,6 +175,7 @@ class ContasReceberTest extends DatabaseTestCase
         $this->assertSame('2026-07-13', $conta['data_pagamento']);
         $this->assertSame('250.00', $conta['valor_pago']);
         $this->assertSame('pix', $conta['forma_recebimento']);
+        $this->assertSame('comprovantes/cr_teste.pdf', $conta['comprovante_path']);
         $this->assertSame('Pago via PIX', $conta['observacoes_baixa']);
 
         $stmtHistorico = $this->db()->prepare('SELECT COUNT(*) FROM contas_receber_historico WHERE conta_receber_id = :id AND evento = \'baixa\'');

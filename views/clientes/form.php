@@ -4,6 +4,9 @@
  * Variáveis esperadas: $cliente (array|null), $isEdit (bool), $errors (array)
  */
 $errors = $errors ?? [];
+$cliente = $cliente ?? [];
+$isEdit = $isEdit ?? false;
+$documentosCliente = $documentosCliente ?? [];
 $pageTitle = $isEdit ? __('clientes.edit') : __('clientes.new');
 require __DIR__ . '/../layout/header.php';
 require __DIR__ . '/../layout/sidebar.php';
@@ -261,6 +264,92 @@ require __DIR__ . '/../layout/sidebar.php';
         </a>
     </div>
 </form>
+
+<!-- Documentos -->
+<div class="form-section mt-3">
+    <div class="form-section-title"><i class="bi bi-file-earmark-arrow-up me-1"></i>Documentos</div>
+
+    <?php if ($isEdit && !empty($cliente['id'])): ?>
+        <form action="<?= url('clientes', 'upload_documento') ?>" method="POST" enctype="multipart/form-data" class="mb-3">
+            <?= csrf_field() ?>
+            <input type="hidden" name="cliente_id" value="<?= e($cliente['id']) ?>">
+
+            <div class="row g-3 document-upload-row">
+                <div class="col-md-3">
+                    <label for="tipo_documento" class="form-label">Tipo de Documento</label>
+                    <select class="form-select" id="tipo_documento" name="tipo_documento">
+                        <option value="rg">RG</option>
+                        <option value="cpf">CPF</option>
+                        <option value="cnh">CNH</option>
+                        <option value="comprovante_residencia">Comprovante de Residencia</option>
+                        <option value="cartao_cnpj">Cartao CNPJ</option>
+                        <option value="contrato_social">Contrato Social</option>
+                        <option value="inscricao_estadual">Inscricao Estadual</option>
+                        <option value="procuracao">Procuracao</option>
+                        <option value="foto_frente">Foto Frente</option>
+                        <option value="foto_verso">Foto Verso</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="documento" class="form-label">Arquivo</label>
+                    <input type="file" class="form-control document-upload-input" id="documento" name="documento" accept=".pdf,.jpg,.jpeg,.png,.webp" required>
+                    <div class="form-text">Envie PDF ou imagem para RG, CPF, Cartao CNPJ e documentos relacionados.</div>
+                </div>
+                <div class="col-md-3 document-upload-action">
+                    <button type="submit" class="btn btn-outline-primary document-upload-button">
+                        <i class="bi bi-upload me-1"></i>Enviar Documento
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive contas-pagar-lista-borda rounded">
+            <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Arquivo</th>
+                        <th>Tamanho</th>
+                        <th>Enviado em</th>
+                        <th style="width: 180px;">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($documentosCliente)): ?>
+                        <?php foreach ($documentosCliente as $documento): ?>
+                            <tr>
+                                <td><?= e(strtoupper(str_replace('_', ' ', (string) $documento['tipo_documento']))) ?></td>
+                                <td><?= e((string) $documento['nome_original']) ?></td>
+                                <td><?= e(number_format(((int) $documento['tamanho_bytes']) / 1024, 1, ',', '.')) ?> KB</td>
+                                <td><?= e(date('d/m/Y H:i', strtotime((string) $documento['criado_em']))) ?></td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="<?= url('clientes', 'download_documento', ['documento_id' => $documento['id']]) ?>" class="btn btn-sm btn-outline-dark btn-action" title="Baixar"><i class="bi bi-download"></i></a>
+                                        <form action="<?= url('clientes', 'delete_documento') ?>" method="POST" onsubmit="return confirm('Excluir este documento?')">
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="documento_id" value="<?= e((string) $documento['id']) ?>">
+                                            <input type="hidden" name="cliente_id" value="<?= e((string) $cliente['id']) ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger btn-action" title="Excluir"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">Nenhum documento enviado para este cliente.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
+        <div class="alert alert-secondary mb-0">
+            Salve o cliente primeiro para habilitar uploads de documentos como RG, CPF e Cartao CNPJ.
+        </div>
+    <?php endif; ?>
+</div>
 
 <!-- Script: toggle campos PF/PJ e busca CEP -->
 <script>
