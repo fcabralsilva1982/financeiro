@@ -19,9 +19,14 @@ switch ($action) {
         // Listagem de cobranças
         $filtros = [
             'empresa_id' => $empresaId,
-            'search' => $_GET['search'] ?? ''
+            'search' => trim((string) ($_GET['search'] ?? '')),
+            'status' => trim((string) ($_GET['status'] ?? '')),
+            'cliente_id' => trim((string) ($_GET['cliente_id'] ?? '')),
+            'periodo_inicio' => trim((string) ($_GET['periodo_inicio'] ?? '')),
+            'periodo_fim' => trim((string) ($_GET['periodo_fim'] ?? '')),
         ];
         $contas = ContasReceber::listar($filtros);
+        $clientes = get_clientes_empresa($empresaId);
         require __DIR__ . '/../views/contas_receber/index.php';
         break;
 

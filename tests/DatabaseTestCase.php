@@ -358,6 +358,22 @@ abstract class DatabaseTestCase extends BaseTestCase
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+        $pdo->exec("CREATE TABLE IF NOT EXISTS `usuario_termos` (
+            `id`            CHAR(36)    NOT NULL,
+            `usuario_id`    CHAR(36)    NOT NULL,
+            `versao_termo`  VARCHAR(20) NOT NULL,
+            `aceito_em`     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `ip`            VARCHAR(45) NULL,
+            `criado_em`     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `atualizado_em` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uk_test_usuario_termo_versao` (`usuario_id`, `versao_termo`),
+            KEY `idx_test_usuario_termos_usuario` (`usuario_id`),
+            CONSTRAINT `fk_test_usuario_termos_usuario`
+                FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
+                ON DELETE CASCADE ON UPDATE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
     }
 
@@ -367,6 +383,7 @@ abstract class DatabaseTestCase extends BaseTestCase
     private static function truncateTables(PDO $pdo): void
     {
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+        $pdo->exec("TRUNCATE TABLE `usuario_termos`");
         $pdo->exec("TRUNCATE TABLE `log_acoes`");
         $pdo->exec("TRUNCATE TABLE `usuario_empresa`");
         $pdo->exec("TRUNCATE TABLE `perfil_permissoes`");

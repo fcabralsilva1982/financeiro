@@ -145,7 +145,7 @@ function registrar_aceite_termo(string $usuarioId): void {
     $stmt = $pdo->prepare(
         "INSERT INTO usuario_termos (id, usuario_id, versao_termo, aceito_em, ip)
          VALUES (:id, :usuario_id, :versao, NOW(), :ip)
-         ON DUPLICATE KEY UPDATE aceito_em = NOW(), ip = VALUES(ip), atualizado_em = CURRENT_TIMESTAMP"
+         ON DUPLICATE KEY UPDATE aceito_em = NOW(), ip = VALUES(ip)"
     );
     $stmt->execute([
         ':id' => generate_uuid(),
@@ -279,7 +279,15 @@ switch ($action) {
             redirect(url('login'));
         }
 
-        registrar_aceite_termo($usuarioId);
+        try {
+            registrar_aceite_termo($usuarioId);
+        } catch (Throwable $ex) {
+            error_log('[TERMS ACCEPT ERROR] ' . $ex->getMessage());
+            log_error('auth', 'aceite_termos_erro', 'Falha ao registrar aceite dos termos: ' . $ex->getMessage(), $usuarioId);
+            set_flash('danger', __('termos.erro_registro_aceite', 'Nao foi possivel registrar o aceite dos termos. Verifique a migration M1 e tente novamente.'));
+            redirect(url('login', 'termos'));
+        }
+
         $_SESSION['terms_accepted_version'] = TERMS_CURRENT_VERSION;
 
         log_info('auth', 'aceite_termos', 'Usuario aceitou os termos versao ' . TERMS_CURRENT_VERSION, $usuarioId);

@@ -15,30 +15,30 @@ O MVP é o conjunto mínimo de funcionalidades que entrega valor real para o usu
 
 ### 2.1 Módulos já implementados (completar/ajustar)
 
-| Módulo | Status atual | O que falta |
-|--------|-------------|-------------|
-| Empresas (multiempresa) | ✅ Completo | — |
-| Perfis e Permissões | ✅ Completo | Adicionar permissões para módulos novos |
-| Clientes | ✅ Completo | — |
-| Fornecedores | ✅ Completo | — |
-| Logs de Auditoria | ✅ Completo | — |
-| Usuários | ⚠️ Mock | Persistência real no banco, gestão de senha, vínculo empresa |
-| Contas a Receber | ⚠️ Básico | Parcelas, histórico, régua de cobrança ativa, baixa manual |
-| Autenticação | ✅ Completo | — |
+| Módulo 					| Status atual 	| O que falta 													|
+|--------					|-------------	|-------------													|
+| Empresas (multiempresa) 	| ✅ Completo 	| -																|
+| Perfis e Permissões 		| ✅ Completo 	| Adicionar permissões para módulos novos						|
+| Clientes 					| ✅ Completo 	| — 															|
+| Fornecedores 				| ✅ Completo 	| — 															|
+| Logs de Auditoria 		| ✅ Completo 	| — 															|
+| Usuários 					| ⚠️ Mock 		| Persistência real no banco, gestão de senha, vínculo empresa	|
+| Contas a Receber 			| ⚠️ Básico 	| Parcelas, histórico, régua de cobrança ativa, baixa manual 	|
+| Autenticação 				| ✅ Completo 	| — 															|
 
 ### 2.2 Módulos a construir
 
-| Módulo | Prioridade | Descrição resumida |
-|--------|-----------|-------------------|
-| **Contas a Pagar** | Alta | Cadastro de contas com fornecedor, parcelamento, aprovação e baixa de pagamento |
-| **Dashboard** | Alta | Painel por empresa: totais, saldo previsto, inadimplência, gráfico mensal |
-| **Fluxo de Caixa** | Alta | Visão de entradas x saídas por período, com projeção |
-| **Régua de Cobrança** | Alta | Disparos automáticos por e-mail (SMTP) e WhatsApp (API externa) |
-| **Relatórios** | Média | Inadimplência, a vencer, pagas, por período e por cliente/fornecedor |
-| **Importação CSV/Excel** | Média | Importação de lançamentos e clientes/fornecedores em lote |
-| **Conciliação Bancária** | Média | Importação de OFX e matching com lançamentos do sistema |
-| **Centro de Custo / Categoria** | Média | Categorização de lançamentos para relatórios gerenciais |
-| **Contas Recorrentes** | Baixa | Geração automática de contas a pagar com repetição mensal/anual |
+| Módulo 							| Prioridade 	| Descrição resumida |
+|--------							|-----------	|-------------------|
+| **Contas a Pagar** 				| Alta 			| Cadastro de contas com fornecedor, parcelamento, aprovação e baixa de pagamento |
+| **Dashboard** 					| Alta 			| Painel por empresa: totais, saldo previsto, inadimplência, gráfico mensal |
+| **Fluxo de Caixa** 				| Alta 			| Visão de entradas x saídas por período, com projeção |
+| **Régua de Cobrança** 			| Alta 			| Disparos automáticos por e-mail (SMTP) e WhatsApp (API externa) |
+| **Relatórios** 					| Média 		| Inadimplência, a vencer, pagas, por período e por cliente/fornecedor |
+| **Importação CSV/Excel** 			| Média 		| Importação de lançamentos e clientes/fornecedores em lote |
+| **Conciliação Bancária** 			| Média 		| Importação de OFX e matching com lançamentos do sistema |
+| **Centro de Custo / Categoria** 	| Média 		| Categorização de lançamentos para relatórios gerenciais |
+| **Contas Recorrentes** 			| Baixa 		| Geração automática de contas a pagar com repetição mensal/anual |
 
 ---
 

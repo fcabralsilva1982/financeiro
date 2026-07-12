@@ -12,8 +12,24 @@ class ContasReceber {
                 WHERE cr.empresa_id = :empresa_id";
         $params = [':empresa_id' => $filtros['empresa_id']];
         if (!empty($filtros['search'])) {
-            $sql .= " AND (cr.codigo LIKE :search OR c.razao_social LIKE :search)";
+            $sql .= " AND (cr.codigo LIKE :search OR cr.descricao LIKE :search OR c.razao_social LIKE :search)";
             $params[':search'] = '%' . $filtros['search'] . '%';
+        }
+        if (!empty($filtros['status'])) {
+            $sql .= " AND cr.status = :status";
+            $params[':status'] = $filtros['status'];
+        }
+        if (!empty($filtros['cliente_id'])) {
+            $sql .= " AND cr.cliente_id = :cliente_id";
+            $params[':cliente_id'] = $filtros['cliente_id'];
+        }
+        if (!empty($filtros['periodo_inicio'])) {
+            $sql .= " AND cr.data_vencimento >= :periodo_inicio";
+            $params[':periodo_inicio'] = $filtros['periodo_inicio'];
+        }
+        if (!empty($filtros['periodo_fim'])) {
+            $sql .= " AND cr.data_vencimento <= :periodo_fim";
+            $params[':periodo_fim'] = $filtros['periodo_fim'];
         }
         $sql .= " ORDER BY cr.data_vencimento DESC, cr.codigo DESC";
         $stmt = $pdo->prepare($sql);

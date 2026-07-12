@@ -21,7 +21,9 @@ class AuthTest extends DatabaseTestCase
             // Precisamos definir $action como algo inofensivo antes de incluir.
             global $action;
             $action = '__noop__';
+            ob_start();
             require_once __DIR__ . '/../../controllers/auth.php';
+            ob_end_clean();
         }
     }
 
@@ -128,6 +130,24 @@ class AuthTest extends DatabaseTestCase
 
         $stmt->execute([':id' => $dados['usuario']['id']]);
         $this->assertNotNull($stmt->fetchColumn(), 'ultimo_login deve ser preenchido após o update');
+    }
+
+    public function test_registrar_aceite_termo_cria_ou_atualiza_registro(): void
+    {
+        $dados = $this->criarUsuarioCompleto();
+
+        registrar_aceite_termo($dados['usuario']['id']);
+        registrar_aceite_termo($dados['usuario']['id']);
+
+        $stmt = $this->db()->prepare(
+            'SELECT COUNT(*) FROM usuario_termos WHERE usuario_id = :uid AND versao_termo = :versao'
+        );
+        $stmt->execute([
+            ':uid' => $dados['usuario']['id'],
+            ':versao' => TERMS_CURRENT_VERSION,
+        ]);
+
+        $this->assertSame(1, (int) $stmt->fetchColumn());
     }
 
     // =========================================================

@@ -19,6 +19,7 @@ $_SERVER['HTTP_USER_AGENT'] = 'PHPUnit';
 
 // Iniciar sessão para testes (antes do config.php)
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.save_path', sys_get_temp_dir());
     session_start();
 }
 
