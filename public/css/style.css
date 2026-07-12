@@ -8,6 +8,26 @@ html {
     font-size: 80%;
 }
 
+/* --- Loader global da tela --- */
+.page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(248, 249, 250, 0.9);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.page-loader.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 /* --- Sidebar --- */
 #sidebar {
     width: 250px;
@@ -288,6 +308,10 @@ html {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
+    }
+
+    .page-loader {
+        transition: none;
     }
 }
 

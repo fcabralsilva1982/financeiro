@@ -19,7 +19,12 @@
     <!-- Custom CSS -->
     <link href="<?= asset('css/style.css') ?>" rel="stylesheet">
 </head>
-<body>
+<body class="page-loading">
+
+<!-- Loader global de carregamento de tela -->
+<div id="pageLoader" class="page-loader" aria-live="polite" aria-label="Carregando" role="status">
+    <div class="spinner-border text-primary" aria-hidden="true"></div>
+</div>
 
 <!-- Navbar Top -->
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom fixed-top shadow-sm">

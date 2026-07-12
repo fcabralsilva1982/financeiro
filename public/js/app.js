@@ -8,7 +8,70 @@ window.addEventListener('unhandledrejection', (event) => {
     console.error('[FinanceiroApp] Unhandled promise rejection:', event.reason);
 });
 
+function hidePageLoader() {
+    const pageLoader = document.getElementById('pageLoader');
+    if (!pageLoader) {
+        return;
+    }
+
+    pageLoader.classList.add('is-hidden');
+    document.body.classList.remove('page-loading');
+}
+
+function showPageLoader() {
+    const pageLoader = document.getElementById('pageLoader');
+    if (!pageLoader) {
+        return;
+    }
+
+    pageLoader.classList.remove('is-hidden');
+    document.body.classList.add('page-loading');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    hidePageLoader();
+
+    // Exibe loader em submissões de formulário
+    document.querySelectorAll('form').forEach((form) => {
+        form.addEventListener('submit', () => {
+            if (form.hasAttribute('data-no-loader')) {
+                return;
+            }
+            showPageLoader();
+        });
+    });
+
+    // Exibe loader em navegações por link
+    document.querySelectorAll('a[href]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            if (event.defaultPrevented || event.button !== 0) {
+                return;
+            }
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                return;
+            }
+
+            const href = (link.getAttribute('href') || '').trim();
+            if (href === '' || href.startsWith('#') || href.toLowerCase().startsWith('javascript:')) {
+                return;
+            }
+
+            if (link.hasAttribute('download')) {
+                return;
+            }
+
+            const target = (link.getAttribute('target') || '').toLowerCase();
+            if (target === '_blank') {
+                return;
+            }
+
+            if (link.hasAttribute('data-bs-toggle') || link.hasAttribute('data-no-loader')) {
+                return;
+            }
+
+            showPageLoader();
+        });
+    });
 
     // =========================================================
     // MÁSCARAS DE TELEFONE
@@ -193,3 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
+
+window.addEventListener('load', hidePageLoader);
+window.addEventListener('beforeunload', showPageLoader);
