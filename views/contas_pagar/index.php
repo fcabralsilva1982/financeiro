@@ -107,7 +107,7 @@ require __DIR__ . '/../layout/sidebar.php';
                                     <button type="submit" class="btn btn-sm btn-outline-success btn-action" title="Aprovar"><i class="bi bi-check2-circle"></i></button>
                                 </form>
                             <?php endif; ?>
-                            <form method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline" onsubmit="return confirm('Confirmar cancelamento da conta?');">
+                            <form method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline js-confirm-cancelar-conta-pagar">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="page" value="contas_pagar">
                                 <input type="hidden" name="action" value="cancelar">
@@ -168,5 +168,17 @@ require __DIR__ . '/../layout/sidebar.php';
         </tbody>
     </table>
 </div>
+
+<script nonce="<?= e(CSP_SCRIPT_NONCE) ?>">
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.js-confirm-cancelar-conta-pagar').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!confirm('Confirmar cancelamento da conta?')) {
+                event.preventDefault();
+            }
+        });
+    });
+});
+</script>
 
 <?php require __DIR__ . '/../layout/footer.php'; ?>

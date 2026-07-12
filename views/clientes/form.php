@@ -326,7 +326,7 @@ require __DIR__ . '/../layout/sidebar.php';
                                 <td>
                                     <div class="d-flex gap-1">
                                         <a href="<?= url('clientes', 'download_documento', ['documento_id' => $documento['id']]) ?>" class="btn btn-sm btn-outline-dark btn-action" title="Baixar"><i class="bi bi-download"></i></a>
-                                        <form action="<?= url('clientes', 'delete_documento') ?>" method="POST" onsubmit="return confirm('Excluir este documento?')">
+                                        <form action="<?= url('clientes', 'delete_documento') ?>" method="POST" class="js-confirm-delete-documento">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="documento_id" value="<?= e((string) $documento['id']) ?>">
                                             <input type="hidden" name="cliente_id" value="<?= e((string) $cliente['id']) ?>">
@@ -352,7 +352,7 @@ require __DIR__ . '/../layout/sidebar.php';
 </div>
 
 <!-- Script: toggle campos PF/PJ e busca CEP -->
-<script>
+<script nonce="<?= e(CSP_SCRIPT_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function() {
     const tipoPessoa = document.getElementById('tipo_pessoa');
     const cpfCnpjInput = document.getElementById('cpf_cnpj');
@@ -396,6 +396,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(() => {});
         });
     }
+});
+</script>
+
+<script nonce="<?= e(CSP_SCRIPT_NONCE) ?>">
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.js-confirm-delete-documento').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!confirm('Excluir este documento?')) {
+                event.preventDefault();
+            }
+        });
+    });
 });
 </script>
 

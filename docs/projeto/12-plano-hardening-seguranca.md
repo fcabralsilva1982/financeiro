@@ -20,7 +20,7 @@ Este plano cobre:
 ## Status geral
 - [x] Fase 1 - Correcoes criticas de fluxo (GET/POST + CSRF)
 - [x] Fase 2 - Autorizacao e antifraude
-- [ ] Fase 3 - Hardening de plataforma e supply chain
+- [x] Fase 3 - Hardening de plataforma e supply chain
 - [ ] Fase 4 - Fechamento, validacao final e documentacao
 
 ---
@@ -98,27 +98,41 @@ Evidencias da Fase 2:
 ## Fase 3 - Hardening de plataforma e supply chain
 
 ### SEC-007 Endurecer CSP e reduzir superficie XSS
-- [ ] Remover "unsafe-inline" quando possivel
-- [ ] Adotar nonce/hash para scripts inline necessarios
-- [ ] Criar testes de cabecalhos de seguranca
-- [ ] Atualizar documentacao de frontend e assets externos
+- [x] Remover "unsafe-inline" quando possivel
+- [x] Adotar nonce/hash para scripts inline necessarios
+- [x] Criar testes de cabecalhos de seguranca
+- [x] Atualizar documentacao de frontend e assets externos
 
 ### SEC-008 Tornar segredos obrigatorios em producao
-- [ ] Falhar inicializacao se APP_SECRET estiver em valor padrao
-- [ ] Revisar chaves obrigatorias de ambiente
-- [ ] Criar testes de inicializacao/configuracao
-- [ ] Atualizar docs de configuracao (.env e ambiente externo)
+- [x] Falhar inicializacao se APP_SECRET estiver em valor padrao
+- [x] Revisar chaves obrigatorias de ambiente
+- [x] Criar testes de inicializacao/configuracao
+- [x] Atualizar docs de configuracao (.env e ambiente externo)
 
 ### SEC-009 Corrigir vulnerabilidade de dependencia (phpunit)
-- [ ] Atualizar phpunit para versao sem CVE reportada
-- [ ] Executar suite de testes completa
-- [ ] Reexecutar composer audit sem findings criticos
-- [ ] Atualizar documentacao de desenvolvimento e CI
+- [x] Atualizar phpunit para versao sem CVE reportada
+- [x] Executar suite de testes completa
+- [x] Reexecutar composer audit sem findings criticos
+- [x] Atualizar documentacao de desenvolvimento e CI
 
 ### SEC-010 SRI em recursos CDN (quando aplicavel)
-- [ ] Adicionar integrity e crossorigin nos assets externos suportados
-- [ ] Validar carregamento em ambiente local e homologacao
-- [ ] Atualizar documentacao de frontend/seguranca de supply chain
+- [x] Adicionar integrity e crossorigin nos assets externos suportados
+- [x] Validar carregamento em ambiente local e homologacao
+- [x] Atualizar documentacao de frontend/seguranca de supply chain
+
+Evidencias parciais da Fase 3:
+- CSP com nonce por requisicao implementada em config/config.php, removendo unsafe-inline de script-src.
+- Scripts inline migrados para nonce em views de clientes, fornecedores, empresas, usuarios, contas_pagar, contas_receber, logs e dashboard.
+- Handlers inline onsubmit removidos e substituidos por listeners JS com nonce.
+- SRI aplicado em Bootstrap CSS/JS, Bootstrap Icons e Chart.js nas views com CDN.
+- Testes de CSP adicionados em tests/Integration/SecurityTest.php.
+- Hardening de APP_SECRET em producao documentado em docs/projeto/11-configuracao-env-externo.md.
+- Matriz de segredos obrigatorios em producao implementada em config/config.php (APP_SECRET, DB_PASS e regras condicionais para SMTP_PASS/API_TOKEN).
+- Testes de inicializacao de configuracao adicionados em tests/Unit/ConfigSecurityTest.php (5 testes, 10 assertions).
+- Dependencia phpunit/phpunit atualizada para 9.6.35 com lockfile atualizado.
+- composer audit sem vulnerabilidades encontradas apos atualizacao.
+- Suite completa executada (run-tests.bat), mantendo apenas falhas legadas ja conhecidas fora do escopo da Fase 3.
+- Politica de governanca de dependencias e gate de CI registrada em docs/projeto/13-governanca-dependencias-ci.md.
 
 ---
 
@@ -138,6 +152,52 @@ Evidencias da Fase 2:
 
 ---
 
+## Planejamento de continuidade (proxima sequencia de execucao)
+
+Objetivo deste bloco: concluir Fase 3 e preparar o fechamento da Fase 4 com risco controlado.
+
+### Etapa A - Fechar SEC-008 (segredos obrigatorios)
+- [x] Definir matriz de segredos obrigatorios por ambiente (dev, homolog, prod)
+- [x] Validar obrigatoriedade minima em producao para: APP_SECRET, DB_PASS, SMTP_PASS e API_TOKEN (quando funcionalidade estiver habilitada)
+- [x] Criar testes automatizados de inicializacao em modo producao (cenario valido e invalido)
+- [x] Registrar evidencias no checklist SEC-008
+
+Criterio de aceite da etapa A:
+- [x] Inicializacao falha em producao com segredo ausente/inseguro
+- [x] Testes dedicados de inicializacao passando
+
+### Etapa B - Fechar SEC-009 (supply chain e CI)
+- [x] Atualizar documentacao de desenvolvimento com politica minima de versoes e comando de auditoria
+- [x] Atualizar documentacao de CI com gate de seguranca (composer audit obrigatorio)
+- [x] Registrar versao efetiva do PHPUnit e data da verificacao
+- [x] Marcar SEC-009 como concluido no quadro
+
+Criterio de aceite da etapa B:
+- [x] Documentacao de dev/CI atualizada e coerente com o estado atual do codigo
+- [x] composer audit sem findings criticos
+
+### Etapa C - Preparar SEC-011 (regressao de seguranca)
+- [ ] Corrigir bloqueadores legados da suite completa (ordem de limpeza de tabelas com FK e estabilidade do teste de rate-limit)
+- [ ] Expandir SecurityTest para consolidar cenarios de CSRF, metodo HTTP, RBAC e headers
+- [ ] Executar run-tests.bat com evidencia de resultado
+
+Criterio de aceite da etapa C:
+- Suite completa sem erros estruturais de banco durante setup/teardown
+- Cobertura de seguranca ampliada e reproduzivel
+
+### Ordem recomendada de execucao
+1. Etapa A (SEC-008)
+2. Etapa B (SEC-009)
+3. Etapa C (SEC-011)
+4. SEC-012 (revisao final de documentacao e changelog)
+
+### Riscos e dependencias ativas
+- Falhas legadas de testes com chaves estrangeiras podem mascarar regressao real de seguranca.
+- Teste de rate-limit sensivel ao estado compartilhado entre execucoes pode gerar falso negativo.
+- Conclusao de SEC-011 depende da estabilizacao da suite completa.
+
+---
+
 ## Checklist de acompanhamento detalhado
 
 Use este quadro para status continuo (marcar data e responsavel).
@@ -150,10 +210,10 @@ Use este quadro para status continuo (marcar data e responsavel).
 | SEC-004 | RBAC por acao sensivel | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | Guard central de permissao por rota sensivel no index.php |
 | SEC-005 | Antifraude e auditoria | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | Eventos antifraude + alerta de padrao suspeito no helper |
 | SEC-006 | IP confiavel por proxy | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | get_client_ip com TRUST_PROXY_HEADERS/TRUSTED_PROXIES + testes |
-| SEC-007 | CSP sem unsafe-inline | Alta | Nao iniciado |  |  |  |  |
-| SEC-008 | Segredos obrigatorios | Alta | Nao iniciado |  |  |  |  |
-| SEC-009 | Atualizar phpunit/CVE | Alta | Nao iniciado |  |  |  |  |
-| SEC-010 | SRI para CDN | Media | Nao iniciado |  |  |  |  |
+| SEC-007 | CSP sem unsafe-inline | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | CSP com nonce + remocao de handlers inline + testes de cabecalho |
+| SEC-008 | Segredos obrigatorios | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | Matriz de segredos em producao + ConfigSecurityTest passando |
+| SEC-009 | Atualizar phpunit/CVE | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | phpunit 9.6.35 + composer audit limpo + doc de governanca CI |
+| SEC-010 | SRI para CDN | Media | Concluido |  | 2026-07-12 | 2026-07-12 | integrity/crossorigin em Bootstrap, Icons e Chart.js |
 | SEC-011 | Regressao de seguranca | Critica | Nao iniciado |  |  |  |  |
 | SEC-012 | Atualizacao final de docs | Critica | Nao iniciado |  |  |  |  |
 

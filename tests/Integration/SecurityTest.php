@@ -26,6 +26,23 @@ class SecurityTest extends DatabaseTestCase
     // Proteção XSS via e()
     // =========================================================
 
+    public function test_csp_header_define_nonce_e_bloqueia_unsafe_inline_em_scripts(): void
+    {
+        $this->assertNotEmpty(CSP_HEADER_POLICY, 'Politica CSP deve estar definida');
+        $this->assertMatchesRegularExpression('/script-src\\s+[^;]*\'nonce-[^\']+\'/', CSP_HEADER_POLICY);
+
+        preg_match('/script-src\\s+([^;]+)/', CSP_HEADER_POLICY, $matches);
+        $scriptSrc = $matches[1] ?? '';
+
+        $this->assertStringNotContainsString("'unsafe-inline'", $scriptSrc);
+        $this->assertStringContainsString("'self'", $scriptSrc);
+    }
+
+    public function test_csp_header_define_frame_ancestors_none(): void
+    {
+        $this->assertStringContainsString("frame-ancestors 'none'", CSP_HEADER_POLICY);
+    }
+
     public function test_xss_em_escape_html(): void
     {
         $inputs = [

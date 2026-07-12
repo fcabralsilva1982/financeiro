@@ -229,7 +229,7 @@ require __DIR__ . '/../layout/sidebar.php';
     </div>
 </div>
 
-<script>
+<script nonce="<?= e(CSP_SCRIPT_NONCE) ?>">
 // Popula modal de detalhes do log
 document.getElementById('modalDetalheLog')?.addEventListener('show.bs.modal', function(event) {
     var btn = event.relatedTarget;

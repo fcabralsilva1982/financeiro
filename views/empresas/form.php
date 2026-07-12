@@ -267,7 +267,7 @@ require __DIR__ . '/../layout/sidebar.php';
 </form>
 
 <!-- Preview de imagem ao selecionar arquivo -->
-<script>
+<script nonce="<?= e(CSP_SCRIPT_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function() {
     // --- Logo preview ---
     const input = document.getElementById('logo');

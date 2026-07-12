@@ -107,6 +107,55 @@ define('UPLOAD_AV_SCAN_COMMAND', env('UPLOAD_AV_SCAN_COMMAND', ''));
 define('UPLOAD_AV_FAIL_OPEN', env('UPLOAD_AV_FAIL_OPEN', 'false') === 'true');
 define('UPLOAD_QUARANTINE_PATH', env('UPLOAD_QUARANTINE_PATH', 'C:/laragon/financeiro_storage/quarantine'));
 
+if (!APP_DEBUG) {
+    $requiredSecrets = [
+        'APP_SECRET' => [
+            'value' => APP_SECRET,
+            'min_length' => 32,
+            'allow_default' => false,
+            'default_value' => 'change-me',
+        ],
+        'DB_PASS' => [
+            'value' => (string) env('DB_PASS', ''),
+            'min_length' => 1,
+        ],
+    ];
+
+    if (SMTP_HOST !== '' || env('SMTP_REQUIRED', 'false') === 'true') {
+        $requiredSecrets['SMTP_PASS'] = [
+            'value' => SMTP_PASS,
+            'min_length' => 1,
+        ];
+    }
+
+    if (env('API_TOKEN_REQUIRED', 'false') === 'true') {
+        $requiredSecrets['API_TOKEN'] = [
+            'value' => API_TOKEN,
+            'min_length' => 1,
+        ];
+    }
+
+    foreach ($requiredSecrets as $secretKey => $rule) {
+        $secretValue = trim((string) ($rule['value'] ?? ''));
+        $minLength = (int) ($rule['min_length'] ?? 1);
+        $allowDefault = (bool) ($rule['allow_default'] ?? true);
+        $defaultValue = (string) ($rule['default_value'] ?? '');
+
+        if ($secretValue === '' || strlen($secretValue) < $minLength) {
+            throw new RuntimeException($secretKey . ' inseguro para producao. Configure um segredo forte no ambiente.');
+        }
+
+        if (!$allowDefault && $defaultValue !== '' && hash_equals($defaultValue, $secretValue)) {
+            throw new RuntimeException($secretKey . ' inseguro para producao. Configure um segredo forte no ambiente.');
+        }
+    }
+}
+
+$cspScriptNonce = base64_encode(random_bytes(16));
+define('CSP_SCRIPT_NONCE', $cspScriptNonce);
+$cspHeaderPolicy = "default-src 'self'; script-src 'self' 'nonce-{$cspScriptNonce}' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https://ui-avatars.com; connect-src 'self' https://viacep.com.br; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';";
+define('CSP_HEADER_POLICY', $cspHeaderPolicy);
+
 $trustedProxiesRaw = (string) env('TRUSTED_PROXIES', '');
 $trustedProxies = array_values(array_filter(array_map('trim', explode(',', $trustedProxiesRaw)), static function (string $item): bool {
     return $item !== '';
@@ -153,7 +202,7 @@ header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Cross-Origin-Opener-Policy: same-origin');
 header('Cross-Origin-Resource-Policy: same-origin');
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https://ui-avatars.com; connect-src 'self' https://viacep.com.br; object-src 'none'; base-uri 'self'; form-action 'self';");
+header('Content-Security-Policy: ' . CSP_HEADER_POLICY);
 if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')) {
     header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
 }

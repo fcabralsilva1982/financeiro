@@ -146,7 +146,7 @@ require __DIR__ . '/../layout/sidebar.php';
     </div>
 </form>
 
-<script>
+<script nonce="<?= e(CSP_SCRIPT_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function () {
     const recorrente = document.getElementById('recorrente');
     const periodicidadeWrapper = document.getElementById('periodicidadeWrapper');

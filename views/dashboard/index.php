@@ -155,8 +155,8 @@ require __DIR__ . '/../layout/sidebar.php';
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="<?= e(CSP_SCRIPT_NONCE) ?>" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" integrity="sha384-JUh163oCRItcbPme8pYnROHQMC6fNKTBWtRG3I3I0erJkzNgL7uxKlNwcrcFKeqF" crossorigin="anonymous"></script>
+<script nonce="<?= e(CSP_SCRIPT_NONCE) ?>">
 (() => {
     const labels = <?= json_encode(array_column($fluxoCaixa, 'mes'), JSON_UNESCAPED_UNICODE) ?>;
     const entradas = <?= json_encode(array_map(static fn($r) => (float) $r['entradas'], $fluxoCaixa), JSON_UNESCAPED_UNICODE) ?>;

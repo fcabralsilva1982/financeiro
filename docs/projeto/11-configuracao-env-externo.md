@@ -24,6 +24,20 @@ Centralizar parametros sensiveis e gerais em arquivo externo para evitar segredo
 - Uploads: `UPLOAD_STORAGE_PATH`, `UPLOAD_LOGO_MAX_BYTES`, `UPLOAD_COMPROVANTE_MAX_BYTES`.
 - Uploads avançado: `UPLOAD_RATE_LIMIT_WINDOW_SECONDS`, `UPLOAD_RATE_LIMIT_MAX_ATTEMPTS`, `UPLOAD_AV_SCAN_ENABLED`, `UPLOAD_AV_SCAN_COMMAND`, `UPLOAD_AV_FAIL_OPEN`, `UPLOAD_QUARANTINE_PATH`.
 
+## Regras de seguranca para segredos
+- Em producao (`APP_DEBUG=false`), a inicializacao falha se `APP_SECRET` estiver com valor padrao (`change-me`) ou com menos de 32 caracteres.
+- Em producao (`APP_DEBUG=false`), `DB_PASS` e obrigatorio.
+- Em producao, `SMTP_PASS` e obrigatorio quando `SMTP_HOST` estiver configurado ou quando `SMTP_REQUIRED=true`.
+- Em producao, `API_TOKEN` e obrigatorio quando `API_TOKEN_REQUIRED=true`.
+- Gere `APP_SECRET` com entropia alta (minimo recomendado: 32 caracteres aleatorios).
+- Nunca reutilize `APP_SECRET` entre ambientes (dev/homolog/prod).
+- Armazene segredos apenas no ambiente externo (arquivo fora do repositorio ou secret manager).
+
+Exemplo de geracao local (PowerShell):
+```powershell
+[Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 }))
+```
+
 ## Observacoes
 - Mantenha este arquivo fora do versionamento.
 - Defina valores reais para os campos de segredo antes de producao.

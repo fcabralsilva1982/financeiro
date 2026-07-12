@@ -141,7 +141,7 @@ require __DIR__ . '/../layout/sidebar.php';
 </form>
 
 <!-- Toggle senha fields (edição) -->
-<script>
+<script nonce="<?= e(CSP_SCRIPT_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function() {
     const cb = document.getElementById('alterar_senha');
     if (cb) {
