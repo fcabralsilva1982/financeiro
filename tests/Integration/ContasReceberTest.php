@@ -22,9 +22,12 @@ class ContasReceberTest extends DatabaseTestCase
 
     private function ensureClientesTable(): void
     {
+        $this->db()->exec('SET FOREIGN_KEY_CHECKS = 0');
+        $this->db()->exec('DROP TABLE IF EXISTS cliente_documentos');
         $this->db()->exec('DROP TABLE IF EXISTS contas_receber_historico');
         $this->db()->exec('DROP TABLE IF EXISTS contas_receber');
         $this->db()->exec('DROP TABLE IF EXISTS clientes');
+        $this->db()->exec('SET FOREIGN_KEY_CHECKS = 1');
 
         $this->db()->exec(
             "CREATE TABLE IF NOT EXISTS clientes (

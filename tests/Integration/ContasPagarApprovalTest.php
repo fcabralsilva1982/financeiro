@@ -22,11 +22,14 @@ class ContasPagarApprovalTest extends DatabaseTestCase
     private function rebuildApprovalTables(): void
     {
         $pdo = $this->db();
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+        $pdo->exec('DROP TABLE IF EXISTS fornecedor_documentos');
         $pdo->exec('DROP TABLE IF EXISTS contas_pagar_historico');
         $pdo->exec('DROP TABLE IF EXISTS contas_pagar_parcelas');
         $pdo->exec('DROP TABLE IF EXISTS contas_pagar');
         $pdo->exec('DROP TABLE IF EXISTS categorias');
         $pdo->exec('DROP TABLE IF EXISTS fornecedores');
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
         $pdo->exec("CREATE TABLE fornecedores (
             id CHAR(36) NOT NULL,

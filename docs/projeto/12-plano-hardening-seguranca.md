@@ -21,7 +21,7 @@ Este plano cobre:
 - [x] Fase 1 - Correcoes criticas de fluxo (GET/POST + CSRF)
 - [x] Fase 2 - Autorizacao e antifraude
 - [x] Fase 3 - Hardening de plataforma e supply chain
-- [ ] Fase 4 - Fechamento, validacao final e documentacao
+- [x] Fase 4 - Fechamento, validacao final e documentacao
 
 ---
 
@@ -139,16 +139,22 @@ Evidencias parciais da Fase 3:
 ## Fase 4 - Fechamento e validacao final
 
 ### SEC-011 Regressao de seguranca automatizada
-- [ ] Expandir tests/Integration/SecurityTest.php com novos cenarios
-- [ ] Garantir cobertura de CSRF, metodo HTTP, RBAC e headers
-- [ ] Rodar run-tests.bat com sucesso
-- [ ] Registrar evidencias de execucao
+- [x] Expandir tests/Integration/SecurityTest.php com novos cenarios
+- [x] Garantir cobertura de CSRF, metodo HTTP, RBAC e headers
+- [x] Rodar run-tests.bat com sucesso
+- [x] Registrar evidencias de execucao
 
 ### SEC-012 Revisao de documentacao final
-- [ ] Atualizar docs/projeto afetados pelo hardening
-- [ ] Atualizar guias tecnicos (configuracao, permissao, operacao)
-- [ ] Revisar coerencia entre codigo e documentacao
-- [ ] Publicar changelog de seguranca
+- [x] Atualizar docs/projeto afetados pelo hardening
+- [x] Atualizar guias tecnicos (configuracao, permissao, operacao)
+- [x] Revisar coerencia entre codigo e documentacao
+- [x] Publicar changelog de seguranca
+
+Evidencias da Fase 4:
+- Correcoes de estabilidade da suite implementadas em tests/Integration/ContasPagarApprovalTest.php e tests/Integration/ContasReceberTest.php para limpeza segura de tabelas com FK.
+- Testes de rate-limit em tests/Integration/SecurityTest.php tornados deterministicos com reset explicito de headers de proxy.
+- Execucao completa de regressao: run-tests.bat com resultado OK (157 testes, 291 assertions).
+- Documentacao final consolidada em docs/projeto/11-configuracao-env-externo.md, docs/projeto/13-governanca-dependencias-ci.md e docs/projeto/14-changelog-seguranca.md.
 
 ---
 
@@ -177,13 +183,13 @@ Criterio de aceite da etapa B:
 - [x] composer audit sem findings criticos
 
 ### Etapa C - Preparar SEC-011 (regressao de seguranca)
-- [ ] Corrigir bloqueadores legados da suite completa (ordem de limpeza de tabelas com FK e estabilidade do teste de rate-limit)
-- [ ] Expandir SecurityTest para consolidar cenarios de CSRF, metodo HTTP, RBAC e headers
-- [ ] Executar run-tests.bat com evidencia de resultado
+- [x] Corrigir bloqueadores legados da suite completa (ordem de limpeza de tabelas com FK e estabilidade do teste de rate-limit)
+- [x] Expandir SecurityTest para consolidar cenarios de CSRF, metodo HTTP, RBAC e headers
+- [x] Executar run-tests.bat com evidencia de resultado
 
 Criterio de aceite da etapa C:
-- Suite completa sem erros estruturais de banco durante setup/teardown
-- Cobertura de seguranca ampliada e reproduzivel
+- [x] Suite completa sem erros estruturais de banco durante setup/teardown
+- [x] Cobertura de seguranca ampliada e reproduzivel
 
 ### Ordem recomendada de execucao
 1. Etapa A (SEC-008)
@@ -192,9 +198,9 @@ Criterio de aceite da etapa C:
 4. SEC-012 (revisao final de documentacao e changelog)
 
 ### Riscos e dependencias ativas
-- Falhas legadas de testes com chaves estrangeiras podem mascarar regressao real de seguranca.
-- Teste de rate-limit sensivel ao estado compartilhado entre execucoes pode gerar falso negativo.
-- Conclusao de SEC-011 depende da estabilizacao da suite completa.
+- Falhas legadas de FK em testes de contas: mitigadas com limpeza controlada de tabelas relacionadas.
+- Instabilidade de rate-limit por estado de proxy entre testes: mitigada com reset explicito de headers nos cenarios de seguranca.
+- Risco residual atual: manter disciplina de auditoria de dependencias e regressao completa em cada ciclo de release.
 
 ---
 
@@ -214,8 +220,8 @@ Use este quadro para status continuo (marcar data e responsavel).
 | SEC-008 | Segredos obrigatorios | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | Matriz de segredos em producao + ConfigSecurityTest passando |
 | SEC-009 | Atualizar phpunit/CVE | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | phpunit 9.6.35 + composer audit limpo + doc de governanca CI |
 | SEC-010 | SRI para CDN | Media | Concluido |  | 2026-07-12 | 2026-07-12 | integrity/crossorigin em Bootstrap, Icons e Chart.js |
-| SEC-011 | Regressao de seguranca | Critica | Nao iniciado |  |  |  |  |
-| SEC-012 | Atualizacao final de docs | Critica | Nao iniciado |  |  |  |  |
+| SEC-011 | Regressao de seguranca | Critica | Concluido |  | 2026-07-12 | 2026-07-12 | run-tests.bat OK (157 testes, 291 assertions) |
+| SEC-012 | Atualizacao final de docs | Critica | Concluido |  | 2026-07-12 | 2026-07-12 | Docs 11/13/14 atualizados e coerentes com hardening aplicado |
 
 ---
 

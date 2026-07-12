@@ -190,6 +190,8 @@ class SecurityTest extends DatabaseTestCase
     public function test_upload_rate_limit_excedido_por_ip(): void
     {
         $this->loginAsMaster();
+        $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+        unset($_SERVER['HTTP_X_FORWARDED_FOR'], $_SERVER['HTTP_X_REAL_IP'], $_SERVER['HTTP_CLIENT_IP']);
 
         for ($i = 0; $i < 3; $i++) {
             registrar_log('upload', 'tentativa_logo', 'Teste de rate limit', 'info');
@@ -201,6 +203,8 @@ class SecurityTest extends DatabaseTestCase
     public function test_upload_rate_limit_nao_excedido_abaixo_do_limite(): void
     {
         $this->loginAsMaster();
+        $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+        unset($_SERVER['HTTP_X_FORWARDED_FOR'], $_SERVER['HTTP_X_REAL_IP'], $_SERVER['HTTP_CLIENT_IP']);
 
         for ($i = 0; $i < 2; $i++) {
             registrar_log('upload', 'tentativa_logo', 'Teste de rate limit', 'info');
