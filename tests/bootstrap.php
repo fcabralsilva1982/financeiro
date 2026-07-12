@@ -44,6 +44,8 @@ $_ENV['UPLOAD_AV_SCAN_ENABLED'] = 'false';
 $_ENV['UPLOAD_AV_SCAN_COMMAND'] = '';
 $_ENV['UPLOAD_AV_FAIL_OPEN'] = 'false';
 $_ENV['UPLOAD_QUARANTINE_PATH'] = sys_get_temp_dir() . '/financeiro_storage_test/quarantine';
+$_ENV['TRUST_PROXY_HEADERS'] = 'true';
+$_ENV['TRUSTED_PROXIES'] = '10.10.10.10';
 
 // Capturar headers para evitar erro "headers already sent"
 ob_start();

@@ -107,14 +107,24 @@ define('UPLOAD_AV_SCAN_COMMAND', env('UPLOAD_AV_SCAN_COMMAND', ''));
 define('UPLOAD_AV_FAIL_OPEN', env('UPLOAD_AV_FAIL_OPEN', 'false') === 'true');
 define('UPLOAD_QUARANTINE_PATH', env('UPLOAD_QUARANTINE_PATH', 'C:/laragon/financeiro_storage/quarantine'));
 
+$trustedProxiesRaw = (string) env('TRUSTED_PROXIES', '');
+$trustedProxies = array_values(array_filter(array_map('trim', explode(',', $trustedProxiesRaw)), static function (string $item): bool {
+    return $item !== '';
+}));
+define('TRUST_PROXY_HEADERS', env('TRUST_PROXY_HEADERS', 'false') === 'true');
+define('TRUSTED_PROXIES', $trustedProxies);
+
 // Mapa de modulos/acoes para evolucao de controle de permissao
 define('PERMISSION_MODULES', [
     'empresas',
     'usuarios',
     'perfis',
+    'clientes',
+    'fornecedores',
     'contas_receber',
     'contas_pagar',
     'dashboard',
+    'logs',
     'relatorios',
     'conciliacao',
     'importacao',

@@ -160,16 +160,42 @@ function log_critical($modulo, $acao, $descricao, $registro_id = null, $registro
  * @return string Endereço IPv4 ou IPv6 do cliente, ou '0.0.0.0' como fallback
  */
 function get_client_ip() {
-    $headers = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR'];
-    foreach ($headers as $header) {
-        if (!empty($_SERVER[$header])) {
-            $ip = trim(explode(',', $_SERVER[$header])[0]);
-            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+    $remoteAddr = (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    if (!filter_var($remoteAddr, FILTER_VALIDATE_IP)) {
+        $remoteAddr = '0.0.0.0';
+    }
+
+    $trustProxyHeaders = defined('TRUST_PROXY_HEADERS') && TRUST_PROXY_HEADERS === true;
+    if (!$trustProxyHeaders) {
+        return $remoteAddr;
+    }
+
+    $trustedProxies = defined('TRUSTED_PROXIES') && is_array(TRUSTED_PROXIES) ? TRUSTED_PROXIES : [];
+    if (!in_array($remoteAddr, $trustedProxies, true)) {
+        return $remoteAddr;
+    }
+
+    $xForwardedFor = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
+    if ($xForwardedFor !== '') {
+        foreach (explode(',', $xForwardedFor) as $candidate) {
+            $ip = trim($candidate);
+            if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP)) {
                 return $ip;
             }
         }
     }
-    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+    $xRealIp = trim((string) ($_SERVER['HTTP_X_REAL_IP'] ?? ''));
+    if ($xRealIp !== '' && filter_var($xRealIp, FILTER_VALIDATE_IP)) {
+        return $xRealIp;
+    }
+
+    $clientIp = trim((string) ($_SERVER['HTTP_CLIENT_IP'] ?? ''));
+    if ($clientIp !== '' && filter_var($clientIp, FILTER_VALIDATE_IP)) {
+        return $clientIp;
+    }
+
+    return $remoteAddr;
 }
 
 /**

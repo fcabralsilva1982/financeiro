@@ -391,6 +391,52 @@ class FunctionsTest extends TestCase
         $this->assertSame('C', $result[1]['nome']);
     }
 
+    public function test_resolve_sensitive_route_permission_para_store_criar_e_editar(): void
+    {
+        $this->assertSame(
+            ['modulo' => 'clientes', 'acao' => 'criar'],
+            resolve_sensitive_route_permission('clientes', 'store', ['id' => ''])
+        );
+
+        $this->assertSame(
+            ['modulo' => 'clientes', 'acao' => 'editar'],
+            resolve_sensitive_route_permission('clientes', 'store', ['id' => 'abc'])
+        );
+    }
+
+    public function test_resolve_sensitive_route_permission_para_acoes_sensiveis(): void
+    {
+        $this->assertSame(
+            ['modulo' => 'usuarios', 'acao' => 'excluir'],
+            resolve_sensitive_route_permission('usuarios', 'delete')
+        );
+
+        $this->assertSame(
+            ['modulo' => 'contas_pagar', 'acao' => 'aprovar'],
+            resolve_sensitive_route_permission('contas_pagar', 'aprovar')
+        );
+
+        $this->assertNull(resolve_sensitive_route_permission('login', 'authenticate'));
+        $this->assertNull(resolve_sensitive_route_permission('dashboard', 'index'));
+    }
+
+    public function test_registrar_evento_antifraude_grava_log_warning(): void
+    {
+        $this->assertTrue(function_exists('buscar_logs'));
+
+        $_SESSION['user'] = [
+            'id' => 'u-1',
+            'codigo' => 'USR-0001',
+            'empresa_id' => 'e-1',
+            'empresa_codigo' => 'EMP-0001',
+        ];
+
+        registrar_evento_antifraude('acao_sensivel', 'usuarios', 'excluir', 'reg-1');
+
+        $logs = buscar_logs(['modulo' => 'antifraude', 'acao' => 'acao_sensivel']);
+        $this->assertGreaterThanOrEqual(1, (int) ($logs['total'] ?? 0));
+    }
+
     // =========================================================
     // get_client_ip()
     // =========================================================
@@ -410,6 +456,7 @@ class FunctionsTest extends TestCase
 
     public function test_get_client_ip_x_forwarded_for(): void
     {
+        $_SERVER['REMOTE_ADDR'] = '10.10.10.10';
         $_SERVER['HTTP_X_FORWARDED_FOR'] = '10.0.0.1, 10.0.0.2';
         $this->assertSame('10.0.0.1', get_client_ip());
         unset($_SERVER['HTTP_X_FORWARDED_FOR']);

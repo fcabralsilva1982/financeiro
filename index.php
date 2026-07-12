@@ -50,6 +50,31 @@ if ($page !== 'login' && is_logged_in() && usuario_deve_aceitar_termos()) {
     redirect(url('login', 'termos'));
 }
 
+// RBAC central para rotas sensiveis e trilha antifraude (Fase 2).
+if ($page !== 'login' && is_logged_in()) {
+    $requiredPermission = resolve_sensitive_route_permission((string) $page, (string) $action, $_POST);
+    if ($requiredPermission !== null) {
+        $moduloPermissao = (string) ($requiredPermission['modulo'] ?? '');
+        $acaoPermissao = (string) ($requiredPermission['acao'] ?? '');
+        $registroId = (string) ($_POST['id'] ?? ($_GET['id'] ?? ''));
+
+        if (!can_user($moduloPermissao, $acaoPermissao)) {
+            registrar_evento_antifraude('acesso_negado', $moduloPermissao, $acaoPermissao, $registroId, [
+                'page' => (string) $page,
+                'action' => (string) $action,
+            ]);
+            set_flash('danger', __('common.acesso_negado'));
+            redirect(url('dashboard'));
+        }
+
+        registrar_evento_antifraude('acao_sensivel', $moduloPermissao, $acaoPermissao, $registroId, [
+            'page' => (string) $page,
+            'action' => (string) $action,
+        ]);
+        verificar_alerta_antifraude($moduloPermissao, $acaoPermissao);
+    }
+}
+
 // Proteção de tenant: empresas só podem ser gerenciadas pela empresa master
 if ($page === 'empresas' && $action !== 'logo' && is_logged_in() && !can_manage_empresas()) {
     set_flash('danger', __('common.acesso_negado'));

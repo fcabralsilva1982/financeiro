@@ -19,7 +19,7 @@ Este plano cobre:
 
 ## Status geral
 - [x] Fase 1 - Correcoes criticas de fluxo (GET/POST + CSRF)
-- [ ] Fase 2 - Autorizacao e antifraude
+- [x] Fase 2 - Autorizacao e antifraude
 - [ ] Fase 3 - Hardening de plataforma e supply chain
 - [ ] Fase 4 - Fechamento, validacao final e documentacao
 
@@ -67,22 +67,31 @@ Evidencias da Fase 1:
 ## Fase 2 - Autorizacao e antifraude
 
 ### SEC-004 Expandir RBAC para todos os modulos criticos
-- [ ] Implementar verificacoes can_user(modulo, acao) por operacao sensivel
-- [ ] Criar matriz de permissoes por perfil
-- [ ] Criar testes de autorizacao (permitido/negado)
-- [ ] Atualizar documentacao de perfis e permissoes
+- [x] Implementar verificacoes can_user(modulo, acao) por operacao sensivel
+- [x] Criar matriz de permissoes por perfil
+- [x] Criar testes de autorizacao (permitido/negado)
+- [x] Atualizar documentacao de perfis e permissoes
 
 ### SEC-005 Endurecer trilha antifraude
-- [ ] Registrar eventos sensiveis com contexto minimo (usuario, empresa, ip, recurso)
-- [ ] Criar regra de alerta para padrao suspeito (ex.: muitas exclusoes)
-- [ ] Cobrir com testes de logs de auditoria
-- [ ] Atualizar documentacao operacional de monitoramento
+- [x] Registrar eventos sensiveis com contexto minimo (usuario, empresa, ip, recurso)
+- [x] Criar regra de alerta para padrao suspeito (ex.: muitas exclusoes)
+- [x] Cobrir com testes de logs de auditoria
+- [x] Atualizar documentacao operacional de monitoramento
 
 ### SEC-006 Corrigir confianca de IP de cliente
-- [ ] Ajustar get_client_ip para confiar em proxy apenas quando configurado
-- [ ] Definir variavel/env para lista de proxies confiaveis
-- [ ] Criar testes unitarios para cenarios com e sem proxy confiavel
-- [ ] Atualizar documentacao de deploy/rede reversa
+- [x] Ajustar get_client_ip para confiar em proxy apenas quando configurado
+- [x] Definir variavel/env para lista de proxies confiaveis
+- [x] Criar testes unitarios para cenarios com e sem proxy confiavel
+- [x] Atualizar documentacao de deploy/rede reversa
+
+Evidencias da Fase 2:
+- RBAC central por rota sensivel implementado em index.php com resolve_sensitive_route_permission() e can_user().
+- Matriz de modulos expandida em config/config.php e views/perfis/form.php (clientes, fornecedores, logs).
+- Trilha antifraude implementada em helpers/functions.php com registrar_evento_antifraude() e verificar_alerta_antifraude().
+- Hardening de IP por proxy confiavel implementado em helpers/logger.php com TRUST_PROXY_HEADERS e TRUSTED_PROXIES.
+- Testes adicionados: tests/Integration/AuthorizationFraudTest.php e tests/Integration/ProxyTrustIpTest.php.
+- Testes atualizados: tests/Unit/FunctionsTest.php e tests/bootstrap.php.
+- Execucao de validacao da fase: phpunit focado da Fase 2 passou (51 testes, 85 assertions).
 
 ---
 
@@ -138,9 +147,9 @@ Use este quadro para status continuo (marcar data e responsavel).
 | SEC-001 | GET -> POST em acoes sensiveis | Critica | Concluido |  | 2026-07-12 | 2026-07-12 | Controllers e views da fase 1 migrados para POST |
 | SEC-002 | CSRF 100% escrita | Critica | Concluido |  | 2026-07-12 | 2026-07-12 | Validacao CSRF aplicada nas acoes sensiveis da fase 1 |
 | SEC-003 | Metodo HTTP invalido = 405 | Critica | Concluido |  | 2026-07-12 | 2026-07-12 | Guard enforce_post_request + testes unitarios |
-| SEC-004 | RBAC por acao sensivel | Alta | Nao iniciado |  |  |  |  |
-| SEC-005 | Antifraude e auditoria | Alta | Nao iniciado |  |  |  |  |
-| SEC-006 | IP confiavel por proxy | Alta | Nao iniciado |  |  |  |  |
+| SEC-004 | RBAC por acao sensivel | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | Guard central de permissao por rota sensivel no index.php |
+| SEC-005 | Antifraude e auditoria | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | Eventos antifraude + alerta de padrao suspeito no helper |
+| SEC-006 | IP confiavel por proxy | Alta | Concluido |  | 2026-07-12 | 2026-07-12 | get_client_ip com TRUST_PROXY_HEADERS/TRUSTED_PROXIES + testes |
 | SEC-007 | CSP sem unsafe-inline | Alta | Nao iniciado |  |  |  |  |
 | SEC-008 | Segredos obrigatorios | Alta | Nao iniciado |  |  |  |  |
 | SEC-009 | Atualizar phpunit/CVE | Alta | Nao iniciado |  |  |  |  |

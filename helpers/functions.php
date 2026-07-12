@@ -659,6 +659,155 @@ function can_user(string $modulo, string $acao): bool
 }
 
 /**
+ * Resolve permissao exigida para rota sensivel (SEC-004).
+ * Retorna null quando a rota nao exige permissao granular.
+ *
+ * @return array{modulo:string,acao:string}|null
+ */
+function resolve_sensitive_route_permission(string $page, string $action, array $post = []): ?array
+{
+    $modulo = trim($page);
+    $rota = trim($action);
+
+    if ($modulo === '' || $rota === '' || $modulo === 'login') {
+        return null;
+    }
+
+    $storeAction = static function (array $payload): string {
+        return trim((string) ($payload['id'] ?? '')) !== '' ? 'editar' : 'criar';
+    };
+
+    return match ($modulo) {
+        'clientes', 'fornecedores', 'empresas', 'perfis', 'usuarios', 'categorias' => match ($rota) {
+            'store' => ['modulo' => $modulo, 'acao' => $storeAction($post)],
+            'block', 'unblock' => ['modulo' => $modulo, 'acao' => 'bloquear'],
+            'delete', 'delete_documento' => ['modulo' => $modulo, 'acao' => 'excluir'],
+            default => null,
+        },
+        'contas_receber' => match ($rota) {
+            'save' => ['modulo' => $modulo, 'acao' => $storeAction($post)],
+            'delete' => ['modulo' => $modulo, 'acao' => 'excluir'],
+            'baixar' => ['modulo' => $modulo, 'acao' => 'editar'],
+            default => null,
+        },
+        'contas_pagar' => match ($rota) {
+            'store' => ['modulo' => $modulo, 'acao' => $storeAction($post)],
+            'enviar_aprovacao', 'aprovar', 'cancelar' => ['modulo' => $modulo, 'acao' => 'aprovar'],
+            'baixar_parcela' => ['modulo' => $modulo, 'acao' => 'editar'],
+            default => null,
+        },
+        default => null,
+    };
+}
+
+/**
+ * Registra evento antifraude com contexto minimo (usuario, empresa, ip e recurso).
+ */
+function registrar_evento_antifraude(string $tipo, string $modulo, string $acao, ?string $registroId = null, array $extra = []): void
+{
+    if (!function_exists('registrar_log')) {
+        return;
+    }
+
+    $user = current_user() ?? [];
+    $dados = array_merge([
+        'modulo_alvo' => $modulo,
+        'acao_alvo' => $acao,
+        'registro_id' => $registroId,
+        'usuario_id' => (string) ($user['id'] ?? ''),
+        'usuario_codigo' => (string) ($user['codigo'] ?? ''),
+        'empresa_id' => (string) ($user['empresa_id'] ?? ''),
+        'empresa_codigo' => (string) ($user['empresa_codigo'] ?? ''),
+        'ip' => function_exists('get_client_ip') ? get_client_ip() : (string) ($_SERVER['REMOTE_ADDR'] ?? ''),
+    ], $extra);
+
+    $descricao = 'Evento antifraude: ' . $tipo . ' em ' . $modulo . '.' . $acao;
+    registrar_log('antifraude', $tipo, $descricao, 'warning', $registroId, null, null, $dados);
+}
+
+/**
+ * Registra alerta antifraude se o usuario exceder limite de acoes sensiveis na janela.
+ */
+function verificar_alerta_antifraude(string $modulo, string $acao, int $windowSeconds = 900, int $limite = 3): void
+{
+    if (!is_logged_in() || $windowSeconds <= 0 || $limite <= 0) {
+        return;
+    }
+
+    $usuarioId = (string) (current_user()['id'] ?? '');
+    if ($usuarioId === '') {
+        return;
+    }
+
+    try {
+        $pdo = db();
+        $desde = date('Y-m-d H:i:s', time() - $windowSeconds);
+        $evento = $modulo . '.' . $acao;
+
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*)
+             FROM log_acoes
+             WHERE modulo = 'antifraude'
+               AND acao = 'acao_sensivel'
+               AND usuario_id = :usuario_id
+               AND descricao LIKE :evento
+               AND criado_em >= :desde"
+        );
+        $stmt->execute([
+            ':usuario_id' => $usuarioId,
+            ':evento' => '%em ' . $evento,
+            ':desde' => $desde,
+        ]);
+
+        $qtd = (int) $stmt->fetchColumn();
+        if ($qtd < $limite) {
+            return;
+        }
+
+        $alertaDesc = 'Padrao suspeito detectado para ' . $evento;
+        $check = $pdo->prepare(
+            "SELECT COUNT(*)
+             FROM log_acoes
+             WHERE modulo = 'antifraude'
+               AND acao = 'alerta_padrao_suspeito'
+               AND usuario_id = :usuario_id
+               AND descricao = :descricao
+               AND criado_em >= :desde"
+        );
+        $check->execute([
+            ':usuario_id' => $usuarioId,
+            ':descricao' => $alertaDesc,
+            ':desde' => $desde,
+        ]);
+
+        if ((int) $check->fetchColumn() > 0) {
+            return;
+        }
+
+        if (function_exists('registrar_log')) {
+            registrar_log(
+                'antifraude',
+                'alerta_padrao_suspeito',
+                $alertaDesc,
+                'critical',
+                null,
+                null,
+                null,
+                [
+                    'evento' => $evento,
+                    'quantidade' => $qtd,
+                    'janela_segundos' => $windowSeconds,
+                    'limite' => $limite,
+                    'usuario_id' => $usuarioId,
+                ]
+            );
+        }
+    } catch (Throwable $ex) {
+        // Nao interrompe o fluxo principal em caso de falha na trilha antifraude.
+    }
+}
+
+/**
  * Verifica se o usuario aceitou a versao atual dos termos.
  *
  * @param string $usuarioId
