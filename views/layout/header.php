@@ -80,13 +80,18 @@
                     <li><span class="dropdown-item-text small text-muted">Alternar empresa</span></li>
                     <?php foreach (user_empresas_disponiveis() as $empresa): ?>
                     <li>
-                        <a class="dropdown-item d-flex justify-content-between align-items-center"
-                           href="<?= url('login', 'switch_empresa', ['empresa_id' => $empresa['empresa_id']]) ?>">
-                            <span><?= e($empresa['empresa_nome']) ?></span>
-                            <?php if (($empresa['empresa_id'] ?? '') === current_empresa_id()): ?>
-                                <i class="bi bi-check2 text-success"></i>
-                            <?php endif; ?>
-                        </a>
+                        <form method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="m-0 p-0">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="page" value="login">
+                            <input type="hidden" name="action" value="switch_empresa">
+                            <input type="hidden" name="empresa_id" value="<?= e((string) ($empresa['empresa_id'] ?? '')) ?>">
+                            <button type="submit" class="dropdown-item d-flex justify-content-between align-items-center">
+                                <span><?= e($empresa['empresa_nome']) ?></span>
+                                <?php if (($empresa['empresa_id'] ?? '') === current_empresa_id()): ?>
+                                    <i class="bi bi-check2 text-success"></i>
+                                <?php endif; ?>
+                            </button>
+                        </form>
                     </li>
                     <?php endforeach; ?>
                     <?php endif; ?>

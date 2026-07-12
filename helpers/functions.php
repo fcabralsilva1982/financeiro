@@ -375,6 +375,30 @@ function csrf_field() {
 }
 
 /**
+ * Verifica se o token CSRF enviado e valido para a sessao atual.
+ */
+function has_valid_csrf_token(string $enviado): bool
+{
+    $sessao = (string) ($_SESSION['csrf_token'] ?? '');
+    return $enviado !== '' && $sessao !== '' && hash_equals($sessao, $enviado);
+}
+
+/**
+ * Exige metodo POST para a acao atual.
+ * Retorna false e responde 405 quando o metodo e invalido.
+ */
+function enforce_post_request(): bool
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+        return true;
+    }
+
+    http_response_code(405);
+    echo 'Metodo nao permitido.';
+    return false;
+}
+
+/**
  * Renderiza e consome a mensagem flash armazenada na sessão.
  *
  * Mensagens flash são alertas temporários (sucesso, erro, aviso) exibidos

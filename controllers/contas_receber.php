@@ -137,6 +137,15 @@ switch ($action) {
         break;
 
     case 'save':
+        if (!enforce_post_request()) {
+            break;
+        }
+
+        if (!validar_csrf_contas_receber()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('contas_receber'));
+        }
+
         // Salvar nova ou editar cobrança
         $dados = $_POST;
         $dados['empresa_id'] = $empresaId;
@@ -158,6 +167,21 @@ switch ($action) {
         break;
 
     case 'delete':
+        if (!enforce_post_request()) {
+            break;
+        }
+
+        if (!validar_csrf_contas_receber()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('contas_receber'));
+        }
+
+        $id = (string) ($_POST['id'] ?? '');
+        if ($id === '') {
+            set_flash('danger', __('contas_receber.erro_nao_encontrada'));
+            redirect(url('contas_receber'));
+        }
+
         // Excluir cobrança
         ContasReceber::excluir($id, $empresaId);
         set_flash('success', __('contas_receber.sucesso_excluida'));

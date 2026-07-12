@@ -76,7 +76,16 @@ switch ($action) {
         break;
 
     case 'delete':
-        $id = (string) ($_GET['id'] ?? '');
+        if (!enforce_post_request()) {
+            break;
+        }
+
+        if (!validar_csrf_categorias()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('categorias'));
+        }
+
+        $id = (string) ($_POST['id'] ?? '');
         if ($id === '') {
             set_flash('danger', 'Categoria nao informada.');
             redirect(url('categorias'));

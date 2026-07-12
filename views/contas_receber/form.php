@@ -30,6 +30,7 @@ require __DIR__ . '/../layout/sidebar.php';
 <?php endif; ?>
 
 <form method="post" action="<?= url('contas_receber', 'save') ?>">
+    <?= csrf_field() ?>
     <input type="hidden" name="id" value="<?= e($conta['id'] ?? '') ?>">
     <input type="hidden" name="status" value="<?= e($conta['status'] ?? 'emitida') ?>">
 

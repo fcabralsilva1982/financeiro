@@ -644,7 +644,15 @@ switch ($action) {
     // ----------------------------------------------------------
     case 'block':
     case 'unblock':
-        $id = $_GET['id'] ?? '';
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('empresas'));
+        }
+
+        $id = $_POST['id'] ?? '';
         if (empty($id)) {
             set_flash('danger', __('empresas.erro_nao_encontrada'));
             redirect(url('empresas'));
@@ -686,7 +694,15 @@ switch ($action) {
     // EXCLUIR
     // ----------------------------------------------------------
     case 'delete':
-        $id = $_GET['id'] ?? '';
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('empresas'));
+        }
+
+        $id = $_POST['id'] ?? '';
         if (empty($id)) {
             set_flash('danger', __('empresas.erro_nao_encontrada'));
             redirect(url('empresas'));

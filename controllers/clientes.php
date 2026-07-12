@@ -598,8 +598,8 @@ switch ($action) {
         exit;
 
     case 'delete_documento':
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(url('clientes'));
+        if (!enforce_post_request()) {
+            break;
         }
         if (!validar_csrf_clientes()) {
             set_flash('danger', __('common.erro_csrf'));
@@ -642,7 +642,15 @@ switch ($action) {
     // BLOQUEAR
     // ----------------------------------------------------------
     case 'block':
-        $id = $_GET['id'] ?? '';
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_clientes()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('clientes'));
+        }
+
+        $id = $_POST['id'] ?? '';
         $cliente = $id ? buscar_cliente_por_id($id) : null;
         if (!$cliente) {
             set_flash('danger', __('clientes.erro_nao_encontrado'));
@@ -660,7 +668,15 @@ switch ($action) {
     // DESBLOQUEAR
     // ----------------------------------------------------------
     case 'unblock':
-        $id = $_GET['id'] ?? '';
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_clientes()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('clientes'));
+        }
+
+        $id = $_POST['id'] ?? '';
         $cliente = $id ? buscar_cliente_por_id($id) : null;
         if (!$cliente) {
             set_flash('danger', __('clientes.erro_nao_encontrado'));
@@ -678,7 +694,15 @@ switch ($action) {
     // EXCLUIR
     // ----------------------------------------------------------
     case 'delete':
-        $id = $_GET['id'] ?? '';
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_clientes()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('clientes'));
+        }
+
+        $id = $_POST['id'] ?? '';
         $cliente = $id ? buscar_cliente_por_id($id) : null;
         if (!$cliente) {
             set_flash('danger', __('clientes.erro_nao_encontrado'));

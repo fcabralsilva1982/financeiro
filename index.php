@@ -13,8 +13,8 @@ require_once __DIR__ . '/helpers/database.php';
 require_once __DIR__ . '/helpers/logger.php';
 
 // Página e ação solicitadas
-$page   = $_GET['page'] ?? '';
-$action = $_GET['action'] ?? 'index';
+$page   = $_GET['page'] ?? ($_POST['page'] ?? '');
+$action = $_GET['action'] ?? ($_POST['action'] ?? 'index');
 
 // Páginas válidas
 $validPages = ['login', 'dashboard', 'empresas', 'usuarios', 'perfis', 'logs', 'clientes', 'fornecedores', 'contas_receber', 'contas_pagar', 'categorias'];

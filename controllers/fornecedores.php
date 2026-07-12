@@ -584,8 +584,8 @@ switch ($action) {
         exit;
 
     case 'delete_documento':
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect(url('fornecedores'));
+        if (!enforce_post_request()) {
+            break;
         }
         if (!validar_csrf_fornecedores()) {
             set_flash('danger', __('common.erro_csrf'));
@@ -628,7 +628,15 @@ switch ($action) {
     // BLOQUEAR
     // ----------------------------------------------------------
     case 'block':
-        $id = $_GET['id'] ?? '';
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_fornecedores()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('fornecedores'));
+        }
+
+        $id = $_POST['id'] ?? '';
         $fornecedor = $id ? buscar_fornecedor_por_id($id) : null;
         if (!$fornecedor) {
             set_flash('danger', __('fornecedores.erro_nao_encontrado'));
@@ -646,7 +654,15 @@ switch ($action) {
     // DESBLOQUEAR
     // ----------------------------------------------------------
     case 'unblock':
-        $id = $_GET['id'] ?? '';
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_fornecedores()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('fornecedores'));
+        }
+
+        $id = $_POST['id'] ?? '';
         $fornecedor = $id ? buscar_fornecedor_por_id($id) : null;
         if (!$fornecedor) {
             set_flash('danger', __('fornecedores.erro_nao_encontrado'));
@@ -664,7 +680,15 @@ switch ($action) {
     // EXCLUIR
     // ----------------------------------------------------------
     case 'delete':
-        $id = $_GET['id'] ?? '';
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_fornecedores()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('fornecedores'));
+        }
+
+        $id = $_POST['id'] ?? '';
         $fornecedor = $id ? buscar_fornecedor_por_id($id) : null;
         if (!$fornecedor) {
             set_flash('danger', __('fornecedores.erro_nao_encontrado'));

@@ -15,7 +15,14 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= e(__('common.nao')) ?></button>
-                <a href="#" id="btnConfirmarExcluir" class="btn btn-danger" role="button"><?= e(__('common.sim')) ?>, <?= e(__('common.excluir')) ?></a>
+                <form id="formConfirmarExcluir" method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="page" id="excluirPage" value="">
+                    <input type="hidden" name="action" id="excluirAction" value="">
+                    <input type="hidden" name="id" id="excluirId" value="">
+                    <input type="hidden" name="vinculo_id" id="excluirVinculoId" value="">
+                    <button type="submit" id="btnConfirmarExcluir" class="btn btn-danger"><?= e(__('common.sim')) ?>, <?= e(__('common.excluir')) ?></button>
+                </form>
             </div>
         </div>
     </div>
@@ -34,7 +41,14 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= e(__('common.nao')) ?></button>
-                <a href="#" id="btnConfirmarBloquear" class="btn btn-warning" role="button"><?= e(__('common.sim')) ?></a>
+                <form id="formConfirmarBloquear" method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="page" id="bloquearPage" value="">
+                    <input type="hidden" name="action" id="bloquearAction" value="">
+                    <input type="hidden" name="id" id="bloquearId" value="">
+                    <input type="hidden" name="vinculo_id" id="bloquearVinculoId" value="">
+                    <button type="submit" id="btnConfirmarBloquear" class="btn btn-warning"><?= e(__('common.sim')) ?></button>
+                </form>
             </div>
         </div>
     </div>

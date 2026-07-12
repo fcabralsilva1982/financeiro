@@ -515,7 +515,15 @@ switch ($action) {
 
     case 'block':
     case 'unblock':
-        $id = (string) ($_GET['id'] ?? '');
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_usuarios()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('usuarios'));
+        }
+
+        $id = (string) ($_POST['id'] ?? '');
         if ($id === '') {
             set_flash('danger', 'Usuario nao encontrado.');
             redirect(url('usuarios'));
@@ -542,8 +550,16 @@ switch ($action) {
         break;
 
     case 'delete':
-        $id = (string) ($_GET['id'] ?? '');
-        $vinculoId = (string) ($_GET['vinculo_id'] ?? '');
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_usuarios()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('usuarios'));
+        }
+
+        $id = (string) ($_POST['id'] ?? '');
+        $vinculoId = (string) ($_POST['vinculo_id'] ?? '');
 
         if ($id === '') {
             set_flash('danger', 'Usuario nao encontrado.');

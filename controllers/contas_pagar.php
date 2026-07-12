@@ -173,7 +173,20 @@ switch ($action) {
         break;
 
     case 'enviar_aprovacao':
-        $id = (string) ($_GET['id'] ?? '');
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_contas_pagar()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('contas_pagar'));
+        }
+
+        $id = (string) ($_POST['id'] ?? '');
+        if ($id === '') {
+            set_flash('danger', 'Conta a pagar nao encontrada.');
+            redirect(url('contas_pagar'));
+        }
+
         try {
             ContasPagar::enviarParaAprovacao($id, $empresaId, $usuarioId);
             log_info('contas_pagar', 'enviar_aprovacao', 'Conta enviada para aprovacao', $id);
@@ -185,7 +198,20 @@ switch ($action) {
         break;
 
     case 'aprovar':
-        $id = (string) ($_GET['id'] ?? '');
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_contas_pagar()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('contas_pagar'));
+        }
+
+        $id = (string) ($_POST['id'] ?? '');
+        if ($id === '') {
+            set_flash('danger', 'Conta a pagar nao encontrada.');
+            redirect(url('contas_pagar'));
+        }
+
         if (!can_user('contas_pagar', 'aprovar')) {
             set_flash('danger', __('common.acesso_negado'));
             redirect(url('contas_pagar'));
@@ -202,7 +228,20 @@ switch ($action) {
         break;
 
     case 'cancelar':
-        $id = (string) ($_GET['id'] ?? '');
+        if (!enforce_post_request()) {
+            break;
+        }
+        if (!validar_csrf_contas_pagar()) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('contas_pagar'));
+        }
+
+        $id = (string) ($_POST['id'] ?? '');
+        if ($id === '') {
+            set_flash('danger', 'Conta a pagar nao encontrada.');
+            redirect(url('contas_pagar'));
+        }
+
         try {
             ContasPagar::cancelar($id, $empresaId, $usuarioId);
             log_info('contas_pagar', 'cancelar', 'Conta cancelada', $id);

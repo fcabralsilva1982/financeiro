@@ -31,6 +31,20 @@ function showPageLoader() {
 document.addEventListener('DOMContentLoaded', () => {
     hidePageLoader();
 
+    function getActionPayload(rawUrl) {
+        if (!rawUrl) {
+            return null;
+        }
+
+        const parsed = new URL(rawUrl, window.location.origin);
+        return {
+            page: parsed.searchParams.get('page') || '',
+            action: parsed.searchParams.get('action') || '',
+            id: parsed.searchParams.get('id') || '',
+            vinculoId: parsed.searchParams.get('vinculo_id') || '',
+        };
+    }
+
     // Exibe loader em submissões de formulário
     document.querySelectorAll('form').forEach((form) => {
         form.addEventListener('submit', () => {
@@ -223,9 +237,18 @@ document.addEventListener('DOMContentLoaded', () => {
         modalExcluir.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             const url = button.getAttribute('data-url');
-            const btnConfirm = document.getElementById('btnConfirmarExcluir');
-            if (btnConfirm && url) {
-                btnConfirm.setAttribute('href', url);
+            const payload = getActionPayload(url);
+
+            const pageEl = document.getElementById('excluirPage');
+            const actionEl = document.getElementById('excluirAction');
+            const idEl = document.getElementById('excluirId');
+            const vinculoEl = document.getElementById('excluirVinculoId');
+
+            if (payload && pageEl && actionEl && idEl && vinculoEl) {
+                pageEl.value = payload.page;
+                actionEl.value = payload.action;
+                idEl.value = payload.id;
+                vinculoEl.value = payload.vinculoId;
             }
         });
     }
@@ -238,12 +261,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const url = button.getAttribute('data-url');
             const title = button.getAttribute('data-title') || '';
             const msg = button.getAttribute('data-msg') || '';
+            const payload = getActionPayload(url);
 
-            const btnConfirm = document.getElementById('btnConfirmarBloquear');
             const titleEl = document.getElementById('modalBloquearTitle');
             const msgEl = document.getElementById('modalBloquearMsg');
+            const pageEl = document.getElementById('bloquearPage');
+            const actionEl = document.getElementById('bloquearAction');
+            const idEl = document.getElementById('bloquearId');
+            const vinculoEl = document.getElementById('bloquearVinculoId');
 
-            if (btnConfirm && url) btnConfirm.setAttribute('href', url);
+            if (payload && pageEl && actionEl && idEl && vinculoEl) {
+                pageEl.value = payload.page;
+                actionEl.value = payload.action;
+                idEl.value = payload.id;
+                vinculoEl.value = payload.vinculoId;
+            }
             if (titleEl && title) titleEl.textContent = title;
             if (msgEl && msg) msgEl.textContent = msg;
         });

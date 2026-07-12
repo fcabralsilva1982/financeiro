@@ -91,11 +91,29 @@ require __DIR__ . '/../layout/sidebar.php';
                         <td><?= (int) $conta['parcelas_pagas'] ?>/<?= (int) $conta['parcelas_total'] ?></td>
                         <td>
                             <a href="<?= url('contas_pagar', 'edit', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-primary btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
-                            <a href="<?= url('contas_pagar', 'enviar_aprovacao', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-warning btn-action" title="Enviar para aprovacao"><i class="bi bi-send"></i></a>
+                            <form method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="page" value="contas_pagar">
+                                <input type="hidden" name="action" value="enviar_aprovacao">
+                                <input type="hidden" name="id" value="<?= e((string) $conta['id']) ?>">
+                                <button type="submit" class="btn btn-sm btn-outline-warning btn-action" title="Enviar para aprovacao"><i class="bi bi-send"></i></button>
+                            </form>
                             <?php if (can_user('contas_pagar', 'aprovar')): ?>
-                                <a href="<?= url('contas_pagar', 'aprovar', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-success btn-action" title="Aprovar"><i class="bi bi-check2-circle"></i></a>
+                                <form method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="page" value="contas_pagar">
+                                    <input type="hidden" name="action" value="aprovar">
+                                    <input type="hidden" name="id" value="<?= e((string) $conta['id']) ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-success btn-action" title="Aprovar"><i class="bi bi-check2-circle"></i></button>
+                                </form>
                             <?php endif; ?>
-                            <a href="<?= url('contas_pagar', 'cancelar', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-danger btn-action" title="Cancelar"><i class="bi bi-x-circle"></i></a>
+                            <form method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline" onsubmit="return confirm('Confirmar cancelamento da conta?');">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="page" value="contas_pagar">
+                                <input type="hidden" name="action" value="cancelar">
+                                <input type="hidden" name="id" value="<?= e((string) $conta['id']) ?>">
+                                <button type="submit" class="btn btn-sm btn-outline-danger btn-action" title="Cancelar"><i class="bi bi-x-circle"></i></button>
+                            </form>
                         </td>
                     </tr>
                     <?php

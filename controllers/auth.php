@@ -368,14 +368,24 @@ switch ($action) {
         break;
 
     case 'switch_empresa':
+        if (!enforce_post_request()) {
+            break;
+        }
+
         if (!is_logged_in()) {
             redirect(url('login'));
         }
 
-        $empresaId = trim((string) ($_GET['empresa_id'] ?? ''));
+        $csrfEnviado = (string) ($_POST['csrf_token'] ?? '');
+        if (!has_valid_csrf_token($csrfEnviado)) {
+            set_flash('danger', __('common.erro_csrf'));
+            redirect(url('dashboard'));
+        }
+
+        $empresaId = trim((string) ($_POST['empresa_id'] ?? ''));
         if ($empresaId === '') {
             set_flash('danger', 'Empresa nao informada para alternancia.');
-            redirect(url('empresas'));
+            redirect(url('dashboard'));
         }
 
         $usuarioAtual = current_user();
@@ -391,7 +401,7 @@ switch ($action) {
 
         if (!$vinculoSelecionado || !$usuarioAtual) {
             set_flash('danger', 'Empresa invalida para este usuario.');
-            redirect(url('empresas'));
+            redirect(url('dashboard'));
         }
 
         aplicar_empresa_na_sessao($usuarioAtual, $vinculoSelecionado, $vinculosDisponiveis);

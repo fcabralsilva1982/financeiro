@@ -260,6 +260,39 @@ class FunctionsTest extends TestCase
         $this->assertStringContainsString('token-fixo-para-teste', $html);
     }
 
+    public function test_has_valid_csrf_token_retorna_true_para_token_valido(): void
+    {
+        $_SESSION['csrf_token'] = 'token-valido-seguranca';
+        $this->assertTrue(has_valid_csrf_token('token-valido-seguranca'));
+    }
+
+    public function test_has_valid_csrf_token_retorna_false_para_token_invalido(): void
+    {
+        $_SESSION['csrf_token'] = 'token-valido-seguranca';
+        $this->assertFalse(has_valid_csrf_token('token-invalido'));
+        $this->assertFalse(has_valid_csrf_token(''));
+    }
+
+    public function test_enforce_post_request_retorna_true_quando_metodo_post(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $this->assertTrue(enforce_post_request());
+    }
+
+    public function test_enforce_post_request_retorna_false_e_405_quando_metodo_invalido(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        http_response_code(200);
+
+        ob_start();
+        $result = enforce_post_request();
+        $output = ob_get_clean();
+
+        $this->assertFalse($result);
+        $this->assertSame(405, http_response_code());
+        $this->assertStringContainsString('Metodo nao permitido.', (string) $output);
+    }
+
     // =========================================================
     // flash_message() / set_flash()
     // =========================================================
