@@ -8,6 +8,16 @@ window.addEventListener('unhandledrejection', (event) => {
     console.error('[FinanceiroApp] Unhandled promise rejection:', event.reason);
 });
 
+let suppressBeforeUnloadLoaderUntil = 0;
+
+function suppressBeforeUnloadLoaderTemporarily(milliseconds = 8000) {
+    suppressBeforeUnloadLoaderUntil = Date.now() + milliseconds;
+}
+
+function shouldSuppressBeforeUnloadLoader() {
+    return Date.now() <= suppressBeforeUnloadLoaderUntil;
+}
+
 function hidePageLoader() {
     const pageLoader = document.getElementById('pageLoader');
     if (!pageLoader) {
@@ -70,7 +80,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Downloads (ex.: comprovantes) não disparam navegação completa,
+            // então manter o loader ativo causaria travamento visual.
+            const payload = getActionPayload(href);
+            if (payload && payload.action.toLowerCase().startsWith('download')) {
+                suppressBeforeUnloadLoaderTemporarily();
+                return;
+            }
+
             if (link.hasAttribute('download')) {
+                suppressBeforeUnloadLoaderTemporarily();
                 return;
             }
 
@@ -290,4 +309,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('load', hidePageLoader);
-window.addEventListener('beforeunload', showPageLoader);
+window.addEventListener('beforeunload', () => {
+    if (shouldSuppressBeforeUnloadLoader()) {
+        return;
+    }
+    showPageLoader();
+});
+
+// Alguns navegadores disparam beforeunload em downloads sem sair da página.
+// Ao retomar foco/visibilidade, garantimos que o loader não fique preso.
+window.addEventListener('focus', hidePageLoader);
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        hidePageLoader();
+    }
+});
