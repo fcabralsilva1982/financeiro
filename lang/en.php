@@ -341,6 +341,8 @@ return [
         'status' => 'Status',
         'acoes' => 'Actions',
         'search' => 'Search supplier by name, tax ID, email or phone...',
+        'filtro_empresa' => 'Filter by company',
+        'todas_empresas' => 'All companies',
         'filtro_categoria' => 'Category',
         'todas_categorias' => 'All categories',
         'erro_validacao' => 'Please fix the errors below:',

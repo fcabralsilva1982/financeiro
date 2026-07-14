@@ -44,6 +44,9 @@ function buscar_fornecedores($filtros = [], $pagina = 1, $porPagina = 15) {
     if (!can_see_all_empresas()) {
         $where[] = "f.empresa_id = :empresa_id";
         $params[':empresa_id'] = current_empresa_id();
+    } elseif (!empty($filtros['empresa_id'])) {
+        $where[] = "f.empresa_id = :empresa_filtro";
+        $params[':empresa_filtro'] = (string) $filtros['empresa_id'];
     }
 
     if (!empty($filtros['busca'])) {
@@ -86,6 +89,21 @@ function buscar_fornecedores($filtros = [], $pagina = 1, $porPagina = 15) {
     $stmt->execute();
 
     return ['fornecedores' => $stmt->fetchAll(), 'total' => $total];
+}
+
+/**
+ * Lista empresas ativas para filtro da listagem (somente para master).
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function buscar_empresas_para_filtro_fornecedores(): array {
+    if (!can_see_all_empresas()) {
+        return [];
+    }
+
+    $pdo = db();
+    $stmt = $pdo->query("SELECT id, codigo, nome_fantasia FROM empresas WHERE status = 'ativo' ORDER BY codigo ASC");
+    return $stmt->fetchAll();
 }
 
 /**
@@ -718,8 +736,10 @@ switch ($action) {
             'busca'     => $_GET['busca'] ?? '',
             'status'    => $_GET['status'] ?? '',
             'categoria' => $_GET['categoria'] ?? '',
+            'empresa_id' => $_GET['empresa_id'] ?? '',
         ];
 
+        $empresasFiltro = buscar_empresas_para_filtro_fornecedores();
         $resultado     = buscar_fornecedores($filtros, $pagina, $porPagina);
         $fornecedores  = $resultado['fornecedores'];
         $total         = $resultado['total'];

@@ -344,6 +344,8 @@ return [
         'status' => 'Status',
         'acoes' => 'Ações',
         'search' => 'Buscar fornecedor por nome, CPF/CNPJ, e-mail ou telefone...',
+        'filtro_empresa' => 'Filtrar por empresa',
+        'todas_empresas' => 'Todas as empresas',
         'filtro_categoria' => 'Categoria',
         'todas_categorias' => 'Todas as categorias',
         'erro_validacao' => 'Corrija os erros abaixo:',

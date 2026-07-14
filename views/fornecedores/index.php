@@ -23,7 +23,7 @@ require __DIR__ . '/../layout/sidebar.php';
 <form method="GET" action="<?= url('fornecedores') ?>" class="filter-bar">
     <input type="hidden" name="page" value="fornecedores">
     <div class="row g-2 align-items-center">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="input-group input-group-sm">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input type="text" class="form-control" name="busca"
@@ -31,6 +31,18 @@ require __DIR__ . '/../layout/sidebar.php';
                        placeholder="<?= e(__('fornecedores.search')) ?>">
             </div>
         </div>
+        <?php if (can_see_all_empresas()): ?>
+        <div class="col-md-3">
+            <select class="form-select form-select-sm" name="empresa_id">
+                <option value=""><?= e(__('fornecedores.todas_empresas')) ?></option>
+                <?php foreach (($empresasFiltro ?? []) as $empresa): ?>
+                    <option value="<?= e($empresa['id']) ?>" <?= ($filtros['empresa_id'] ?? '') === ($empresa['id'] ?? '') ? 'selected' : '' ?>>
+                        <?= e(($empresa['codigo'] ?? '') . ' - ' . ($empresa['nome_fantasia'] ?? '')) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
         <div class="col-md-2">
             <select class="form-select form-select-sm" name="status">
                 <option value=""><?= e(__('usuarios.todos_status')) ?></option>
@@ -38,7 +50,7 @@ require __DIR__ . '/../layout/sidebar.php';
                 <option value="bloqueado" <?= ($filtros['status'] ?? '') === 'bloqueado' ? 'selected' : '' ?>><?= e(__('common.bloqueado')) ?></option>
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <button type="submit" class="btn btn-sm btn-primary me-1"><i class="bi bi-funnel me-1"></i><?= e(__('logs.filtrar')) ?></button>
             <a href="<?= url('fornecedores') ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg me-1"></i><?= e(__('logs.limpar')) ?></a>
         </div>
