@@ -81,26 +81,52 @@ require __DIR__ . '/../layout/sidebar.php';
         </thead>
         <tbody>
             <?php if (!empty($contas)): ?>
+                <?php
+                $statusRowClasse = [
+                    'vencida'            => 'conta-row-vencida',
+                    'paga'               => 'conta-row-paga',
+                    'pendente_aprovacao' => 'conta-row-pendente-aprovacao',
+                    'aprovada'           => 'conta-row-aprovada',
+                    'parcialmente_paga'  => 'conta-row-parcialmente-paga',
+                    'cancelada'          => 'conta-row-cancelada',
+                    'rascunho'           => 'conta-row-rascunho',
+                ];
+                $statusBadgeClasse = [
+                    'vencida'            => 'badge-status-vencida',
+                    'paga'               => 'badge-status-paga',
+                    'pendente_aprovacao' => 'badge-status-pendente-aprovacao',
+                    'aprovada'           => 'badge-status-aprovada',
+                    'parcialmente_paga'  => 'badge-status-parcialmente-paga',
+                    'cancelada'          => 'badge-status-cancelada',
+                    'rascunho'           => 'badge-status-rascunho',
+                ];
+                ?>
                 <?php foreach ($contas as $conta): ?>
-                    <tr>
+                    <?php
+                    $rowClass    = $statusRowClasse[$conta['status']]   ?? '';
+                    $badgeClass  = $statusBadgeClasse[$conta['status']] ?? 'bg-secondary';
+                    ?>
+                    <tr class="<?= $rowClass ?>">
                         <td><span class="badge bg-light text-dark font-monospace"><?= e($conta['codigo']) ?></span></td>
                         <td><?= e($conta['fornecedor_nome']) ?></td>
                         <td><?= e($conta['descricao']) ?></td>
                         <td><?= e((string) ($conta['categoria_nome'] ?? '-')) ?></td>
                         <td><?= e(date_fmt($conta['data_vencimento'])) ?></td>
                         <td>R$ <?= number_format((float) $conta['valor_total'], 2, ',', '.') ?></td>
-                        <td><span class="badge bg-secondary"><?= e(str_replace('_', ' ', ucfirst((string) $conta['status']))) ?></span></td>
+                        <td><span class="badge <?= $badgeClass ?>"><?= e(str_replace('_', ' ', ucfirst((string) $conta['status']))) ?></span></td>
                         <td><?= (int) $conta['parcelas_pagas'] ?>/<?= (int) $conta['parcelas_total'] ?></td>
                         <td>
                             <a href="<?= url('contas_pagar', 'edit', ['id' => $conta['id']]) ?>" class="btn btn-sm btn-outline-primary btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
-                            <form method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="page" value="contas_pagar">
-                                <input type="hidden" name="action" value="enviar_aprovacao">
-                                <input type="hidden" name="id" value="<?= e((string) $conta['id']) ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-warning btn-action" title="Enviar para aprovacao"><i class="bi bi-send"></i></button>
-                            </form>
-                            <?php if (can_user('contas_pagar', 'aprovar')): ?>
+                            <?php if ($conta['status'] === 'rascunho'): ?>
+                                <form method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="page" value="contas_pagar">
+                                    <input type="hidden" name="action" value="enviar_aprovacao">
+                                    <input type="hidden" name="id" value="<?= e((string) $conta['id']) ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning btn-action" title="Enviar para aprovacao"><i class="bi bi-send"></i></button>
+                                </form>
+                            <?php endif; ?>
+                            <?php if ($conta['status'] === 'pendente_aprovacao' && can_user('contas_pagar', 'aprovar')): ?>
                                 <form method="post" action="<?= html_entity_decode(url(), ENT_QUOTES, 'UTF-8') ?>" class="d-inline">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="page" value="contas_pagar">

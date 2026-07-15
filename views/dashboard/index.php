@@ -11,7 +11,7 @@ require __DIR__ . '/../layout/sidebar.php';
 </div>
 
 <div class="row g-3 mb-3">
-    <div class="col-md-3">
+    <div class="col-md-2 col-sm-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small">Recebimentos em Aberto</div>
@@ -19,7 +19,7 @@ require __DIR__ . '/../layout/sidebar.php';
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2 col-sm-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small">Despesas em Aberto</div>
@@ -27,21 +27,119 @@ require __DIR__ . '/../layout/sidebar.php';
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 col-sm-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="text-muted small">Saldo Previsto</div>
+                <div class="text-muted small">Saldo Previsto <small class="text-muted">(em aberto)</small></div>
                 <div class="fs-4 fw-bold <?= ((float) $kpis['saldo_previsto']) >= 0 ? 'text-success' : 'text-danger' ?>">
                     R$ <?= number_format((float) $kpis['saldo_previsto'], 2, ',', '.') ?>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 col-sm-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Saldo Realizado <small class="text-muted">(caixa efetivo)</small></div>
+                <div class="fs-4 fw-bold <?= ((float) $kpis['saldo_realizado']) >= 0 ? 'text-success' : 'text-danger' ?>">
+                    R$ <?= number_format((float) $kpis['saldo_realizado'], 2, ',', '.') ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small">Inadimplência</div>
                 <div class="fs-4 fw-bold text-danger">R$ <?= number_format((float) $kpis['inadimplencia'], 2, ',', '.') ?></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== FILTRO DE MÊS ===== -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" action="" class="d-flex align-items-center gap-3 flex-wrap">
+            <label for="filtroMes" class="fw-semibold mb-0 text-nowrap">
+                <i class="bi bi-calendar-month me-1"></i>Análise do mês:
+            </label>
+            <input type="month" id="filtroMes" name="mes"
+                   value="<?= e($mesAnoRaw) ?>"
+                   min="2020-01" max="<?= date('Y-m', strtotime('+12 months')) ?>"
+                   class="form-control form-control-sm" style="width:180px">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="bi bi-search me-1"></i>Filtrar
+            </button>
+            <?php if ($mesAnoRaw !== date('Y-m')): ?>
+                <a href="<?= e(url('dashboard')) ?>" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Mês atual
+                </a>
+            <?php endif; ?>
+            <span class="text-muted small ms-auto">
+                Exibindo: <?= e(sprintf('%02d/%04d', $filtroMes, $filtroAno)) ?>
+            </span>
+        </form>
+    </div>
+</div>
+
+<!-- ===== KPIs DO MÊS SELECIONADO ===== -->
+<?php
+$nomeMes = (new DateTimeImmutable(sprintf('%04d-%02d-01', $filtroAno, $filtroMes)))->format('F/Y');
+$mesesPtBr = ['January'=>'Janeiro','February'=>'Fevereiro','March'=>'Março','April'=>'Abril',
+               'May'=>'Maio','June'=>'Junho','July'=>'Julho','August'=>'Agosto',
+               'September'=>'Setembro','October'=>'Outubro','November'=>'Novembro','December'=>'Dezembro'];
+$nomeMesPtBr = strtr($nomeMes, $mesesPtBr);
+?>
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-bar-chart-line me-1"></i>Resultado de <?= e($nomeMesPtBr) ?>
+    </div>
+    <div class="card-body pb-2">
+        <div class="row g-3">
+            <div class="col-md-2 col-sm-6">
+                <div class="text-muted small">Previsto Receber</div>
+                <div class="fs-5 fw-bold text-success">
+                    R$ <?= number_format((float) $kpisMensal['previsto_receber'], 2, ',', '.') ?>
+                </div>
+                <div class="text-muted" style="font-size:.75rem">por vencimento</div>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="text-muted small">Previsto Pagar</div>
+                <div class="fs-5 fw-bold text-danger">
+                    R$ <?= number_format((float) $kpisMensal['previsto_pagar'], 2, ',', '.') ?>
+                </div>
+                <div class="text-muted" style="font-size:.75rem">por vencimento</div>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="text-muted small">Resultado Previsto</div>
+                <?php $rp = (float) $kpisMensal['resultado_previsto']; ?>
+                <div class="fs-5 fw-bold <?= $rp >= 0 ? 'text-success' : 'text-danger' ?>">
+                    R$ <?= number_format($rp, 2, ',', '.') ?>
+                </div>
+                <div class="text-muted" style="font-size:.75rem">receber − pagar</div>
+            </div>
+            <div class="col-md-2 col-sm-6 border-start ps-3">
+                <div class="text-muted small">Efetivamente Recebido</div>
+                <div class="fs-5 fw-bold text-success">
+                    R$ <?= number_format((float) $kpisMensal['recebido_real'], 2, ',', '.') ?>
+                </div>
+                <div class="text-muted" style="font-size:.75rem">pela data de recebimento</div>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="text-muted small">Efetivamente Pago</div>
+                <div class="fs-5 fw-bold text-danger">
+                    R$ <?= number_format((float) $kpisMensal['pago_no_mes'], 2, ',', '.') ?>
+                </div>
+                <div class="text-muted" style="font-size:.75rem">contas pagas no venc.</div>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="text-muted small">Resultado Realizado</div>
+                <?php $rr = (float) $kpisMensal['resultado_realizado']; ?>
+                <div class="fs-5 fw-bold <?= $rr >= 0 ? 'text-success' : 'text-danger' ?>">
+                    R$ <?= number_format($rr, 2, ',', '.') ?>
+                </div>
+                <div class="text-muted" style="font-size:.75rem">recebido − pago</div>
             </div>
         </div>
     </div>

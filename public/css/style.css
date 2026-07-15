@@ -253,6 +253,45 @@ html {
     margin-bottom: 0;
 }
 
+/* --- Destaque de linhas por status (Contas a Pagar / Contas a Receber) --- */
+.conta-row-vencida {
+    background-color: rgba(220, 53, 69, 0.07) !important;
+    border-left: 3px solid #dc3545;
+}
+.conta-row-paga {
+    background-color: rgba(25, 135, 84, 0.07) !important;
+    border-left: 3px solid #198754;
+}
+.conta-row-pendente-aprovacao {
+    background-color: rgba(255, 193, 7, 0.08) !important;
+    border-left: 3px solid #ffc107;
+}
+.conta-row-aprovada {
+    background-color: rgba(13, 110, 253, 0.06) !important;
+    border-left: 3px solid #0d6efd;
+}
+.conta-row-parcialmente-paga {
+    background-color: rgba(13, 202, 240, 0.07) !important;
+    border-left: 3px solid #0dcaf0;
+}
+.conta-row-cancelada {
+    background-color: rgba(108, 117, 125, 0.06) !important;
+    border-left: 3px solid #adb5bd;
+    opacity: 0.8;
+}
+.conta-row-rascunho {
+    border-left: 3px solid #dee2e6;
+}
+
+/* --- Badges de status (Contas a Pagar) --- */
+.badge-status-vencida        { background-color: #dc3545; color: #fff; }
+.badge-status-paga           { background-color: #198754; color: #fff; }
+.badge-status-pendente-aprovacao { background-color: #ffc107; color: #212529; }
+.badge-status-aprovada       { background-color: #0d6efd; color: #fff; }
+.badge-status-parcialmente-paga  { background-color: #0dcaf0; color: #212529; }
+.badge-status-cancelada      { background-color: #adb5bd; color: #212529; }
+.badge-status-rascunho       { background-color: #6c757d; color: #fff; }
+
 /* --- Upload de documentos do cliente --- */
 .document-upload-row {
     justify-content: center;
@@ -524,6 +563,13 @@ html {
         border-color: #495057;
         background: #212529;
     }
+
+    .conta-row-vencida           { background-color: rgba(220, 53, 69, 0.15) !important; }
+    .conta-row-paga              { background-color: rgba(25, 135, 84, 0.15) !important; }
+    .conta-row-pendente-aprovacao { background-color: rgba(255, 193, 7, 0.12) !important; }
+    .conta-row-aprovada          { background-color: rgba(13, 110, 253, 0.12) !important; }
+    .conta-row-parcialmente-paga { background-color: rgba(13, 202, 240, 0.12) !important; }
+    .conta-row-cancelada         { background-color: rgba(108, 117, 125, 0.10) !important; }
 
 
 @media (max-width: 767.98px) {

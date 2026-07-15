@@ -104,8 +104,8 @@ function processar_upload_comprovante_recebimento(): ?string
 
 $empresaId = current_empresa_id();
 $usuarioId = (string) (current_user()['id'] ?? '');
-$action = $_GET['action'] ?? 'index';
-$id = $_GET['id'] ?? null;
+$action = $_GET['action'] ?? ($_POST['action'] ?? 'index');
+$id = $_GET['id'] ?? ($_POST['id'] ?? null);
 
 switch ($action) {
     case 'index':
@@ -202,6 +202,7 @@ switch ($action) {
                 set_flash('success', __('contas_receber.sucesso_baixada'));
                 redirect(url('contas_receber'));
             } catch (Throwable $e) {
+                log_error('contas_receber', 'baixar', 'Erro ao dar baixa em conta a receber: ' . $e->getMessage());
                 set_flash('danger', $e->getMessage());
                 redirect(url('contas_receber', 'baixar', ['id' => (string) ($_POST['id'] ?? '')]));
             }

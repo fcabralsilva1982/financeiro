@@ -9,7 +9,7 @@ if (!is_logged_in()) {
 
 $empresaId = (string) current_empresa_id();
 $usuarioId = (string) (current_user()['id'] ?? '');
-$action = $_GET['action'] ?? 'index';
+$action = $_GET['action'] ?? ($_POST['action'] ?? 'index');
 
 function validar_csrf_contas_pagar(): bool
 {
@@ -192,6 +192,7 @@ switch ($action) {
             log_info('contas_pagar', 'enviar_aprovacao', 'Conta enviada para aprovacao', $id);
             set_flash('success', 'Conta enviada para aprovacao.');
         } catch (Throwable $e) {
+            log_error('contas_pagar', 'enviar_aprovacao', 'Erro ao enviar conta para aprovacao: ' . $e->getMessage(), $id);
             set_flash('danger', $e->getMessage());
         }
         redirect(url('contas_pagar'));
@@ -222,6 +223,7 @@ switch ($action) {
             log_info('contas_pagar', 'aprovar', 'Conta aprovada', $id);
             set_flash('success', 'Conta aprovada com sucesso.');
         } catch (Throwable $e) {
+            log_error('contas_pagar', 'aprovar', 'Erro ao aprovar conta a pagar: ' . $e->getMessage(), $id);
             set_flash('danger', $e->getMessage());
         }
         redirect(url('contas_pagar'));

@@ -39,10 +39,14 @@ class ContasReceber {
 
     public static function buscar($id, $empresaId) {
         $pdo = db();
-        $sql = "SELECT * FROM contas_receber WHERE id = :id AND empresa_id = :empresa_id";
+        $sql = "SELECT cr.*, c.razao_social AS cliente_nome
+                FROM contas_receber cr
+                LEFT JOIN clientes c ON c.id = cr.cliente_id
+                WHERE cr.id = :id AND cr.empresa_id = :empresa_id
+                LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':id' => $id, ':empresa_id' => $empresaId]);
-        return $stmt->fetch();
+        return $stmt->fetch() ?: null;
     }
 
     public static function criar($dados) {
