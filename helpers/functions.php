@@ -684,6 +684,11 @@ function resolve_sensitive_route_permission(string $page, string $action, array 
             'delete', 'delete_documento' => ['modulo' => $modulo, 'acao' => 'excluir'],
             default => null,
         },
+        'conciliacao' => match ($rota) {
+            'importar' => ['modulo' => $modulo, 'acao' => 'criar'],
+            'marcar_receber', 'marcar_pagar', 'marcar_interno', 'ignorar' => ['modulo' => $modulo, 'acao' => 'editar'],
+            default => null,
+        },
         'contas_receber' => match ($rota) {
             'save' => ['modulo' => $modulo, 'acao' => $storeAction($post)],
             'delete' => ['modulo' => $modulo, 'acao' => 'excluir'],

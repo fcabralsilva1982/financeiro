@@ -17,7 +17,7 @@ $page   = $_GET['page'] ?? ($_POST['page'] ?? '');
 $action = $_GET['action'] ?? ($_POST['action'] ?? 'index');
 
 // Páginas válidas
-$validPages = ['login', 'dashboard', 'empresas', 'usuarios', 'perfis', 'logs', 'clientes', 'fornecedores', 'contas_receber', 'contas_pagar', 'categorias'];
+$validPages = ['login', 'dashboard', 'empresas', 'usuarios', 'perfis', 'logs', 'clientes', 'fornecedores', 'contas_receber', 'contas_pagar', 'categorias', 'conciliacao'];
 
 // Se nenhuma página informada ou página inválida, redireciona para login
 if (empty($page) || !in_array($page, $validPages)) {

@@ -70,6 +70,13 @@
                         </a>
                     </li>
                     <?php endif; ?>
+                    <?php if (can_user('conciliacao', 'visualizar')): ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?= selected_menu('conciliacao') ?>" href="<?= url('conciliacao') ?>">
+                            <i class="bi bi-bank me-2"></i><?= e(__('menu.conciliacao')) ?>
+                        </a>
+                    </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </li>

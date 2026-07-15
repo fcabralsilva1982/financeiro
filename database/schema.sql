@@ -375,7 +375,10 @@ INSERT INTO `perfil_permissoes` (`id`, `perfil_id`, `modulo`, `acao`) VALUES
 (UUID(), @uuid_perfil_admin, 'perfis',    'excluir'),
 (UUID(), @uuid_perfil_admin, 'categorias', 'visualizar'), (UUID(), @uuid_perfil_admin, 'categorias', 'criar'),
 (UUID(), @uuid_perfil_admin, 'categorias', 'editar'),     (UUID(), @uuid_perfil_admin, 'categorias', 'bloquear'),
-(UUID(), @uuid_perfil_admin, 'categorias', 'excluir');
+(UUID(), @uuid_perfil_admin, 'categorias', 'excluir'),
+(UUID(), @uuid_perfil_admin, 'conciliacao', 'visualizar'), (UUID(), @uuid_perfil_admin, 'conciliacao', 'criar'),
+(UUID(), @uuid_perfil_admin, 'conciliacao', 'editar'),     (UUID(), @uuid_perfil_admin, 'conciliacao', 'bloquear'),
+(UUID(), @uuid_perfil_admin, 'conciliacao', 'excluir');
 
 -- Permissões do perfil Gerente
 INSERT INTO `perfil_permissoes` (`id`, `perfil_id`, `modulo`, `acao`) VALUES
@@ -557,6 +560,81 @@ CREATE TABLE `fornecedor_documentos` (
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Documentos anexados aos fornecedores';
+
+-- ============================================================
+-- 9.2 CONCILIAÇÃO BANCÁRIA
+-- ============================================================
+CREATE TABLE `conciliacao_bancaria` (
+  `id`                           CHAR(36)        NOT NULL COMMENT 'UUID',
+  `empresa_id`                   CHAR(36)        NOT NULL COMMENT 'Tenant — empresa dona da importação',
+  `usuario_id`                   CHAR(36)        NULL     COMMENT 'Usuário que realizou a importação',
+  `nome_arquivo`                 VARCHAR(255)    NOT NULL COMMENT 'Nome original do arquivo OFX importado',
+  `data_importacao`              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Data/hora da importação',
+  `quantidade_transacoes`        INT             NOT NULL DEFAULT 0 COMMENT 'Transações novas gravadas nesta importação',
+  `quantidade_duplicadas`        INT             NOT NULL DEFAULT 0 COMMENT 'Transações ignoradas por FITID já existente',
+  `quantidade_conciliadas_auto`  INT             NOT NULL DEFAULT 0 COMMENT 'Transações conciliadas automaticamente',
+  `quantidade_pendentes`         INT             NOT NULL DEFAULT 0 COMMENT 'Transações ainda pendentes de revisão',
+  `criado_em`                    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em`                DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_conciliacao_bancaria_empresa_data` (`empresa_id`, `data_importacao`),
+  INDEX `idx_conciliacao_bancaria_usuario` (`usuario_id`),
+  CONSTRAINT `fk_conciliacao_bancaria_empresa`
+    FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_conciliacao_bancaria_usuario`
+    FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Cabeçalho das importações de extrato bancário por empresa';
+
+-- ============================================================
+-- 9.3 TRANSAÇÕES DE CONCILIAÇÃO
+-- ============================================================
+CREATE TABLE `conciliacao_transacoes` (
+  `id`                           CHAR(36)        NOT NULL COMMENT 'UUID',
+  `conciliacao_bancaria_id`      CHAR(36)        NOT NULL COMMENT 'Importação de origem',
+  `empresa_id`                   CHAR(36)        NOT NULL COMMENT 'Tenant — empresa dona da transação',
+  `fitid`                        VARCHAR(100)    NOT NULL COMMENT 'Identificador único da transação no OFX',
+  `data_movimento`               DATE            NOT NULL COMMENT 'Data do movimento bancário',
+  `valor`                        DECIMAL(15,2)   NOT NULL COMMENT 'Valor absoluto da transação',
+  `tipo_movimento`               ENUM('credito','debito') NOT NULL COMMENT 'Crédito ou débito identificado no extrato',
+  `descricao_banco`              VARCHAR(255)    NULL     COMMENT 'Descrição principal informada pelo banco',
+  `memo`                         TEXT            NULL     COMMENT 'Campo MEMO adicional do OFX',
+  `status_conciliacao`           ENUM('pendente','conciliado_auto','conciliado_manual','ignorado','movimento_interno') NOT NULL DEFAULT 'pendente' COMMENT 'Status operacional da conciliação',
+  `origem_match`                 ENUM('conta_receber','conta_pagar','novo_recebimento','nova_despesa','movimento_interno','nenhum') NOT NULL DEFAULT 'nenhum' COMMENT 'Destino dado à transação',
+  `conta_receber_id`             CHAR(36)        NULL     COMMENT 'Conta a receber vinculada quando houver match',
+  `conta_pagar_parcela_id`       CHAR(36)        NULL     COMMENT 'Parcela de conta a pagar vinculada quando houver match',
+  `confianca_match`              TINYINT UNSIGNED NULL    COMMENT 'Score de confiança do matching automático',
+  `acao_confirmada_por_usuario_id` CHAR(36)      NULL     COMMENT 'Usuário que confirmou a ação final',
+  `acao_confirmada_em`           DATETIME        NULL     COMMENT 'Data/hora da confirmação manual ou automática',
+  `criado_em`                    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `atualizado_em`                DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_conciliacao_transacoes_empresa_fitid` (`empresa_id`, `fitid`),
+  INDEX `idx_conciliacao_transacoes_importacao` (`conciliacao_bancaria_id`),
+  INDEX `idx_conciliacao_transacoes_empresa_status` (`empresa_id`, `status_conciliacao`),
+  INDEX `idx_conciliacao_transacoes_empresa_data` (`empresa_id`, `data_movimento`),
+  INDEX `idx_conciliacao_transacoes_empresa_tipo` (`empresa_id`, `tipo_movimento`),
+  INDEX `idx_conciliacao_transacoes_receber` (`conta_receber_id`),
+  INDEX `idx_conciliacao_transacoes_pagar` (`conta_pagar_parcela_id`),
+  CONSTRAINT `fk_conciliacao_transacoes_importacao`
+    FOREIGN KEY (`conciliacao_bancaria_id`) REFERENCES `conciliacao_bancaria` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_conciliacao_transacoes_empresa`
+    FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_conciliacao_transacoes_receber`
+    FOREIGN KEY (`conta_receber_id`) REFERENCES `contas_receber` (`id`)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_conciliacao_transacoes_pagar`
+    FOREIGN KEY (`conta_pagar_parcela_id`) REFERENCES `contas_pagar_parcelas` (`id`)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_conciliacao_transacoes_usuario`
+    FOREIGN KEY (`acao_confirmada_por_usuario_id`) REFERENCES `usuarios` (`id`)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Transações individuais de extrato importadas para conciliação';
 
 
 -- ============================================================
