@@ -66,7 +66,7 @@ require __DIR__ . '/../layout/sidebar.php';
 
 <div class="table-responsive contas-pagar-lista-borda rounded">
     <table class="table table-hover align-middle table-striped">
-        <thead class="table-light">
+        <thead class="contas-pagar-thead">
             <tr>
                 <th style="width: 115px;">Codigo</th>
                 <th>Fornecedor</th>
@@ -107,12 +107,12 @@ require __DIR__ . '/../layout/sidebar.php';
                     $badgeClass  = $statusBadgeClasse[$conta['status']] ?? 'bg-secondary';
                     ?>
                     <tr class="<?= $rowClass ?>">
-                        <td><span class="badge bg-light text-dark font-monospace"><?= e($conta['codigo']) ?></span></td>
+                        <td><span class="conta-codigo-badge"><?= e($conta['codigo']) ?></span></td>
                         <td><?= e($conta['fornecedor_nome']) ?></td>
-                        <td><?= e($conta['descricao']) ?></td>
+                        <td class="conta-descricao"><?= e($conta['descricao']) ?></td>
                         <td><?= e((string) ($conta['categoria_nome'] ?? '-')) ?></td>
                         <td><?= e(date_fmt($conta['data_vencimento'])) ?></td>
-                        <td>R$ <?= number_format((float) $conta['valor_total'], 2, ',', '.') ?></td>
+                        <td class="conta-valor">R$ <?= number_format((float) $conta['valor_total'], 2, ',', '.') ?></td>
                         <td><span class="badge <?= $badgeClass ?>"><?= e(str_replace('_', ' ', ucfirst((string) $conta['status']))) ?></span></td>
                         <td><?= (int) $conta['parcelas_pagas'] ?>/<?= (int) $conta['parcelas_total'] ?></td>
                         <td>

@@ -61,6 +61,7 @@ require __DIR__ . '/../layout/sidebar.php';
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body py-2">
         <form method="get" action="" class="d-flex align-items-center gap-3 flex-wrap">
+            <input type="hidden" name="page" value="dashboard">
             <label for="filtroMes" class="fw-semibold mb-0 text-nowrap">
                 <i class="bi bi-calendar-month me-1"></i>Análise do mês:
             </label>

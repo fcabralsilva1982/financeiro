@@ -253,6 +253,45 @@ html {
     margin-bottom: 0;
 }
 
+/* --- Cabeçalho destacado da tabela Contas a Pagar --- */
+.contas-pagar-thead th {
+    background-color: #f0f4f8;
+    color: #344054;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid #c9d4e0;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+}
+
+/* Código do título: badge com borda discreta */
+.conta-codigo-badge {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    border: 1px solid #c9d4e0;
+    background-color: #f8f9fa;
+    color: #344054;
+    padding: 0.2em 0.55em;
+    border-radius: 0.3rem;
+    font-family: monospace;
+}
+
+/* Descrição: principal identificador visual do título */
+.conta-descricao {
+    font-weight: 600;
+    color: #1d2939;
+}
+
+/* Valor: negrito e ligeiramente maior */
+.conta-valor {
+    font-weight: 700;
+    color: #1d2939;
+    white-space: nowrap;
+}
+
 /* --- Destaque de linhas por status (Contas a Pagar / Contas a Receber) --- */
 .conta-row-vencida {
     background-color: rgba(220, 53, 69, 0.07) !important;
@@ -563,6 +602,21 @@ html {
         border-color: #495057;
         background: #212529;
     }
+
+    .contas-pagar-thead th {
+        background-color: #2c3034;
+        color: #adb5bd;
+        border-bottom-color: #495057;
+    }
+
+    .conta-codigo-badge {
+        background-color: #2c3034;
+        border-color: #495057;
+        color: #dee2e6;
+    }
+
+    .conta-descricao { color: #dee2e6; }
+    .conta-valor     { color: #dee2e6; }
 
     .conta-row-vencida           { background-color: rgba(220, 53, 69, 0.15) !important; }
     .conta-row-paga              { background-color: rgba(25, 135, 84, 0.15) !important; }
