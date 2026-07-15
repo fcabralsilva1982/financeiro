@@ -33,6 +33,31 @@ class AuthorizationFraudTest extends DatabaseTestCase
         $this->assertGreaterThanOrEqual(1, (int) $result['total']);
     }
 
+    public function test_perfil_nao_master_com_permissao_pode_criar_categoria(): void
+    {
+        $perfil = $this->insertPerfil([
+            'id' => 'd4d4d4d4-d4d4-4d4d-d4d4-d4d4d4d4d4d4',
+            'nome' => 'Administrador',
+        ]);
+
+        $stmt = $this->db()->prepare(
+            'INSERT INTO perfil_permissoes (id, perfil_id, modulo, acao) VALUES (:id, :perfil_id, :modulo, :acao)'
+        );
+        $stmt->execute([
+            ':id' => generate_uuid(),
+            ':perfil_id' => $perfil['id'],
+            ':modulo' => 'categorias',
+            ':acao' => 'criar',
+        ]);
+
+        $this->loginAsRegular();
+
+        $perm = resolve_sensitive_route_permission('categorias', 'store', []);
+
+        $this->assertSame(['modulo' => 'categorias', 'acao' => 'criar'], $perm);
+        $this->assertTrue(can_user($perm['modulo'], $perm['acao']));
+    }
+
     public function test_antifraude_alerta_padrao_suspeito(): void
     {
         $this->loginAsMaster();

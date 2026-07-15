@@ -56,6 +56,22 @@ class EmpresasTest extends DatabaseTestCase
         $this->assertSame('Alpha Ltda', $result['empresas'][0]['razao_social']);
     }
 
+    public function test_buscar_empresas_filtro_busca_por_cpf(): void
+    {
+        $this->insertEmpresa([
+            'codigo' => 'EMP-0001',
+            'tipo_pessoa' => 'PF',
+            'cnpj' => null,
+            'cpf' => '123.456.789-01',
+            'razao_social' => 'Profissional Liberal',
+        ]);
+
+        $result = buscar_empresas(['busca' => '123.456']);
+        $this->assertSame(1, $result['total']);
+        $this->assertSame('PF', $result['empresas'][0]['tipo_pessoa']);
+        $this->assertSame('123.456.789-01', $result['empresas'][0]['cpf']);
+    }
+
     public function test_buscar_empresas_filtro_status(): void
     {
         $this->insertEmpresa(['codigo' => 'EMP-0001', 'cnpj' => '11111111111111', 'status' => 'ativo']);
@@ -102,6 +118,7 @@ class EmpresasTest extends DatabaseTestCase
         $this->assertNotNull($found);
         $this->assertSame($emp['id'], $found['id']);
         $this->assertSame('EMP-0001', $found['codigo']);
+        $this->assertSame('PJ', $found['tipo_pessoa']);
         $this->assertArrayHasKey('contatos', $found);
     }
 
@@ -156,13 +173,19 @@ class EmpresasTest extends DatabaseTestCase
 
     public function test_validar_empresa_cnpj_obrigatorio(): void
     {
-        $erros = validar_empresa(['cnpj' => '', 'razao_social' => 'Teste']);
+        $erros = validar_empresa(['tipo_pessoa' => 'PJ', 'cnpj' => '', 'razao_social' => 'Teste']);
         $this->assertArrayHasKey('cnpj', $erros);
+    }
+
+    public function test_validar_empresa_cpf_obrigatorio_para_pf(): void
+    {
+        $erros = validar_empresa(['tipo_pessoa' => 'PF', 'cpf' => '', 'razao_social' => 'Teste']);
+        $this->assertArrayHasKey('cpf', $erros);
     }
 
     public function test_validar_empresa_razao_social_obrigatoria(): void
     {
-        $erros = validar_empresa(['cnpj' => '12345678901234', 'razao_social' => '']);
+        $erros = validar_empresa(['tipo_pessoa' => 'PJ', 'cnpj' => '12345678901234', 'razao_social' => '']);
         $this->assertArrayHasKey('razao_social', $erros);
     }
 
@@ -170,8 +193,21 @@ class EmpresasTest extends DatabaseTestCase
     {
         $this->insertEmpresa(['codigo' => 'EMP-0001', 'cnpj' => '12345678901234']);
 
-        $erros = validar_empresa(['cnpj' => '12345678901234', 'razao_social' => 'Outra']);
+        $erros = validar_empresa(['tipo_pessoa' => 'PJ', 'cnpj' => '12345678901234', 'razao_social' => 'Outra']);
         $this->assertArrayHasKey('cnpj', $erros);
+    }
+
+    public function test_validar_empresa_cpf_duplicado(): void
+    {
+        $this->insertEmpresa([
+            'codigo' => 'EMP-0001',
+            'tipo_pessoa' => 'PF',
+            'cnpj' => null,
+            'cpf' => '123.456.789-01',
+        ]);
+
+        $erros = validar_empresa(['tipo_pessoa' => 'PF', 'cpf' => '123.456.789-01', 'razao_social' => 'Outra']);
+        $this->assertArrayHasKey('cpf', $erros);
     }
 
     public function test_validar_empresa_cnpj_duplicado_ignora_proprio_id_em_edicao(): void
@@ -179,14 +215,36 @@ class EmpresasTest extends DatabaseTestCase
         $emp = $this->insertEmpresa(['codigo' => 'EMP-0001', 'cnpj' => '12345678901234']);
 
         // Na edição, deve ignorar o próprio registro
-        $erros = validar_empresa(['id' => $emp['id'], 'cnpj' => '12345678901234', 'razao_social' => 'Renomeada'], true);
+        $erros = validar_empresa(['id' => $emp['id'], 'tipo_pessoa' => 'PJ', 'cnpj' => '12345678901234', 'razao_social' => 'Renomeada'], true);
         $this->assertArrayNotHasKey('cnpj', $erros);
     }
 
     public function test_validar_empresa_dados_validos(): void
     {
-        $erros = validar_empresa(['cnpj' => '99999999999999', 'razao_social' => 'Empresa Válida']);
+        $erros = validar_empresa(['tipo_pessoa' => 'PJ', 'cnpj' => '99999999999999', 'razao_social' => 'Empresa Válida']);
         $this->assertEmpty($erros);
+    }
+
+    public function test_validar_empresa_pf_dados_validos_sem_cnpj(): void
+    {
+        $erros = validar_empresa(['tipo_pessoa' => 'PF', 'cpf' => '987.654.321-00', 'cnpj' => '', 'razao_social' => 'Pessoa Física']);
+        $this->assertEmpty($erros);
+    }
+
+    public function test_normalizar_dados_empresa_remove_cnpj_e_ie_para_pf(): void
+    {
+        $dados = normalizar_dados_empresa([
+            'tipo_pessoa' => 'PF',
+            'cpf' => '987.654.321-00',
+            'cnpj' => '11.222.333/0001-44',
+            'inscricao_estadual' => '123',
+            'ie_isento' => '1',
+        ]);
+
+        $this->assertSame('PF', $dados['tipo_pessoa']);
+        $this->assertNull($dados['cnpj']);
+        $this->assertSame('987.654.321-00', $dados['cpf']);
+        $this->assertNull($dados['inscricao_estadual']);
     }
 
     // =========================================================

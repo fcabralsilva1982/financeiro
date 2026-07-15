@@ -17,6 +17,20 @@
 
 ---
 
+## RN-001A — Tipo de Pessoa do Tenant
+
+**Contexto:** Um tenant pode representar uma pessoa jurídica, uma pessoa física ou um profissional liberal.
+
+**Regra:**
+1. `empresas.tipo_pessoa` deve ser `PJ` ou `PF`; o default é `PJ` para compatibilidade com cadastros existentes.
+2. Para `PJ`, o CNPJ é obrigatório e único em `empresas.cnpj`; CPF deve permanecer nulo.
+3. Para `PF`, o CPF é obrigatório e único em `empresas.cpf`; CNPJ e inscrição estadual devem permanecer nulos.
+4. Listagens, buscas e logs devem usar o documento correspondente ao tipo de pessoa.
+
+**Impacto em dados/processo:** Pessoa física/profissional liberal pode operar como tenant sem CNPJ, sem alterar as regras de isolamento, login, alternância de empresa e permissões.
+
+---
+
 ## RN-002 — Controle de Permissões Granular
 
 **Contexto:** Cada usuário possui um perfil por empresa. O perfil define quais ações (`visualizar`, `criar`, `editar`, `bloquear`, `excluir`, `aprovar`) o usuário pode executar em cada módulo.

@@ -42,11 +42,12 @@ function buscar_empresas($filtros = [], $pagina = 1, $porPagina = 15) {
 
     if (!empty($filtros['busca'])) {
         $termo = '%' . $filtros['busca'] . '%';
-        $where[] = "(e.razao_social LIKE :b1 OR e.nome_fantasia LIKE :b2 OR e.cnpj LIKE :b3 OR e.codigo LIKE :b4)";
+        $where[] = "(e.razao_social LIKE :b1 OR e.nome_fantasia LIKE :b2 OR e.cnpj LIKE :b3 OR e.cpf LIKE :b4 OR e.codigo LIKE :b5)";
         $params[':b1'] = $termo;
         $params[':b2'] = $termo;
         $params[':b3'] = $termo;
         $params[':b4'] = $termo;
+        $params[':b5'] = $termo;
     }
 
     if (!empty($filtros['status'])) {
@@ -87,7 +88,7 @@ function buscar_empresas($filtros = [], $pagina = 1, $porPagina = 15) {
 function buscar_empresa_por_id($id) {
     $pdo = db();
     $stmt = $pdo->prepare("
-        SELECT id, codigo, cnpj, inscricao_estadual, razao_social, nome_fantasia,
+        SELECT id, codigo, tipo_pessoa, cnpj, cpf, inscricao_estadual, razao_social, nome_fantasia,
                email, telefone, celular, cep, logradouro, numero, complemento,
                bairro, cidade, uf, logo, observacoes, status, criado_em, atualizado_em
         FROM empresas WHERE id = :id
@@ -161,15 +162,22 @@ function validar_csrf() {
 function validar_empresa($dados, $isEdit = false) {
     $erros = [];
 
-    // CNPJ obrigatório
-    $cnpj = strtoupper(trim($dados['cnpj'] ?? ''));
-    if ($cnpj === '') {
-        $erros['cnpj'] = __('empresas.erro_cnpj_obrigatorio');
+    $tipoPessoa = strtoupper(trim((string) ($dados['tipo_pessoa'] ?? 'PJ')));
+    if (!in_array($tipoPessoa, ['PF', 'PJ'], true)) {
+        $erros['tipo_pessoa'] = __('empresas.erro_tipo_pessoa_obrigatorio');
+        $tipoPessoa = 'PJ';
+    }
+
+    $campoDocumento = $tipoPessoa === 'PF' ? 'cpf' : 'cnpj';
+    $documento = strtoupper(trim((string) ($dados[$campoDocumento] ?? '')));
+    if ($documento === '') {
+        $erros[$campoDocumento] = $tipoPessoa === 'PF'
+            ? __('empresas.erro_cpf_obrigatorio')
+            : __('empresas.erro_cnpj_obrigatorio');
     } else {
-        // Verificar duplicata
         $pdo = db();
-        $sql = "SELECT id FROM empresas WHERE cnpj = :cnpj";
-        $p = [':cnpj' => $cnpj];
+        $sql = "SELECT id FROM empresas WHERE {$campoDocumento} = :documento";
+        $p = [':documento' => $documento];
         if ($isEdit && !empty($dados['id'])) {
             $sql .= " AND id != :id";
             $p[':id'] = $dados['id'];
@@ -177,16 +185,49 @@ function validar_empresa($dados, $isEdit = false) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($p);
         if ($stmt->fetch()) {
-            $erros['cnpj'] = __('empresas.erro_cnpj_duplicado');
+            $erros[$campoDocumento] = $tipoPessoa === 'PF'
+                ? __('empresas.erro_cpf_duplicado')
+                : __('empresas.erro_cnpj_duplicado');
         }
     }
 
-    // Razão Social obrigatória
     if (trim($dados['razao_social'] ?? '') === '') {
         $erros['razao_social'] = __('empresas.erro_razao_obrigatoria');
     }
 
     return $erros;
+}
+
+function normalizar_dados_empresa(array $dados): array {
+    $tipoPessoa = strtoupper(trim((string) ($dados['tipo_pessoa'] ?? 'PJ')));
+    if (!in_array($tipoPessoa, ['PF', 'PJ'], true)) {
+        $tipoPessoa = 'PJ';
+    }
+
+    $cnpj = strtoupper(trim((string) ($dados['cnpj'] ?? '')));
+    $cpf = trim((string) ($dados['cpf'] ?? ''));
+    $ie = trim((string) ($dados['inscricao_estadual'] ?? ''));
+
+    if ($tipoPessoa === 'PF') {
+        $cnpj = '';
+        $ie = '';
+    } elseif (!empty($dados['ie_isento'])) {
+        $ie = 'ISENTO';
+    }
+
+    return [
+        'tipo_pessoa' => $tipoPessoa,
+        'cnpj' => $cnpj !== '' ? $cnpj : null,
+        'cpf' => $tipoPessoa === 'PF' && $cpf !== '' ? $cpf : null,
+        'inscricao_estadual' => $ie !== '' ? $ie : null,
+    ];
+}
+
+function documento_empresa(array $empresa): string {
+    $tipoPessoa = strtoupper((string) ($empresa['tipo_pessoa'] ?? 'PJ'));
+    return $tipoPessoa === 'PF'
+        ? (string) ($empresa['cpf'] ?? '')
+        : (string) ($empresa['cnpj'] ?? '');
 }
 
 // ============================================================
@@ -510,11 +551,7 @@ switch ($action) {
             $pdo = db();
             $pdo->beginTransaction();
 
-            // IE Isento
-            $ie = trim($dados['inscricao_estadual'] ?? '');
-            if (!empty($dados['ie_isento'])) {
-                $ie = 'ISENTO';
-            }
+            $dadosNormalizados = normalizar_dados_empresa($dados);
 
             if ($isEdit) {
                 // ---------- UPDATE ----------
@@ -538,7 +575,7 @@ switch ($action) {
                 }
 
                 $stmt = $pdo->prepare("UPDATE empresas SET
-                    cnpj = :cnpj, inscricao_estadual = :ie, razao_social = :razao,
+                    tipo_pessoa = :tipo_pessoa, cnpj = :cnpj, cpf = :cpf, inscricao_estadual = :ie, razao_social = :razao,
                     nome_fantasia = :fantasia, email = :email, telefone = :fone,
                     celular = :cel, cep = :cep, logradouro = :logr, numero = :num,
                     complemento = :compl, bairro = :bairro, cidade = :cidade, uf = :uf,
@@ -546,8 +583,10 @@ switch ($action) {
                     WHERE id = :id");
 
                 $stmt->execute([
-                    ':cnpj'    => trim($dados['cnpj']),
-                    ':ie'      => $ie,
+                    ':tipo_pessoa' => $dadosNormalizados['tipo_pessoa'],
+                    ':cnpj'    => $dadosNormalizados['cnpj'],
+                    ':cpf'     => $dadosNormalizados['cpf'],
+                    ':ie'      => $dadosNormalizados['inscricao_estadual'],
                     ':razao'   => trim($dados['razao_social']),
                     ':fantasia'=> trim($dados['nome_fantasia'] ?? ''),
                     ':email'   => trim($dados['email'] ?? ''),
@@ -571,7 +610,7 @@ switch ($action) {
 
                 $empresaNova = buscar_empresa_por_id($id);
                 log_info('empresas', 'editar',
-                    'Empresa editada: ' . $empresaNova['codigo'] . ' – ' . $empresaNova['razao_social'],
+                    'Empresa editada: ' . $empresaNova['codigo'] . ' – ' . $empresaNova['razao_social'] . ' (' . $empresaNova['tipo_pessoa'] . ': ' . documento_empresa($empresaNova) . ')',
                     $id, $empresaNova['codigo'], $empresaAnterior, $empresaNova);
 
                 set_flash('success', __('empresas.sucesso_editada'));
@@ -587,19 +626,21 @@ switch ($action) {
                 }
 
                 $stmt = $pdo->prepare("INSERT INTO empresas
-                    (id, codigo, cnpj, inscricao_estadual, razao_social, nome_fantasia,
+                    (id, codigo, tipo_pessoa, cnpj, cpf, inscricao_estadual, razao_social, nome_fantasia,
                      email, telefone, celular, cep, logradouro, numero, complemento,
                      bairro, cidade, uf, logo, observacoes, status)
                     VALUES
-                    (:id, :codigo, :cnpj, :ie, :razao, :fantasia,
+                    (:id, :codigo, :tipo_pessoa, :cnpj, :cpf, :ie, :razao, :fantasia,
                      :email, :fone, :cel, :cep, :logr, :num, :compl,
                      :bairro, :cidade, :uf, :logo, :obs, 'ativo')");
 
                 $stmt->execute([
                     ':id'      => $id,
                     ':codigo'  => $codigo,
-                    ':cnpj'    => trim($dados['cnpj']),
-                    ':ie'      => $ie,
+                    ':tipo_pessoa' => $dadosNormalizados['tipo_pessoa'],
+                    ':cnpj'    => $dadosNormalizados['cnpj'],
+                    ':cpf'     => $dadosNormalizados['cpf'],
+                    ':ie'      => $dadosNormalizados['inscricao_estadual'],
                     ':razao'   => trim($dados['razao_social']),
                     ':fantasia'=> trim($dados['nome_fantasia'] ?? ''),
                     ':email'   => trim($dados['email'] ?? ''),
@@ -621,7 +662,7 @@ switch ($action) {
 
                 $empresaCriada = buscar_empresa_por_id($id);
                 log_info('empresas', 'criar',
-                    'Empresa criada: ' . $codigo . ' – ' . trim($dados['razao_social']),
+                    'Empresa criada: ' . $codigo . ' – ' . trim($dados['razao_social']) . ' (' . $dadosNormalizados['tipo_pessoa'] . ': ' . documento_empresa($empresaCriada) . ')',
                     $id, $codigo, null, $empresaCriada);
 
                 set_flash('success', __('empresas.sucesso_criada'));

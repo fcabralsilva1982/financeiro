@@ -1,5 +1,8 @@
 <?php
 $pageTitle = 'Categorias Financeiras';
+$canCreateCategoria = can_user('categorias', 'criar');
+$canEditCategoria = can_user('categorias', 'editar');
+$canDeleteCategoria = can_user('categorias', 'excluir');
 require __DIR__ . '/../layout/header.php';
 require __DIR__ . '/../layout/sidebar.php';
 ?>
@@ -8,9 +11,11 @@ require __DIR__ . '/../layout/sidebar.php';
 
 <div class="page-header">
     <h2><i class="bi bi-tags me-2"></i>Categorias Financeiras</h2>
+    <?php if ($canCreateCategoria): ?>
     <a href="<?= url('categorias', 'create') ?>" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i>Nova Categoria
     </a>
+    <?php endif; ?>
 </div>
 
 <form method="GET" action="<?= url('categorias') ?>" class="filter-bar">
@@ -70,9 +75,12 @@ require __DIR__ . '/../layout/sidebar.php';
                             <?php endif; ?>
                         </td>
                         <td>
+                            <?php if ($canEditCategoria): ?>
                             <a href="<?= url('categorias', 'edit', ['id' => $categoria['id']]) ?>" class="btn btn-sm btn-outline-primary btn-action" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
+                            <?php endif; ?>
+                            <?php if ($canDeleteCategoria): ?>
                             <button type="button"
                                     class="btn btn-sm btn-outline-danger btn-action"
                                     data-bs-toggle="modal" data-bs-target="#modalExcluir"
@@ -80,6 +88,7 @@ require __DIR__ . '/../layout/sidebar.php';
                                     title="Excluir">
                                 <i class="bi bi-trash"></i>
                             </button>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

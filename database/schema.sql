@@ -132,8 +132,10 @@ USE `financeiro_erp`;
 -- ============================================================
 CREATE TABLE `empresas` (
     `id`                  CHAR(36)        NOT NULL COMMENT 'UUID',
+    `tipo_pessoa`         ENUM('PF','PJ') NOT NULL DEFAULT 'PJ' COMMENT 'Pessoa Fisica ou Juridica',
     `codigo`              VARCHAR(20)     NOT NULL COMMENT 'Código amigável: EMP-0001',
-    `cnpj`                VARCHAR(18)     NOT NULL COMMENT 'CNPJ numérico ou alfanumérico formatado',
+    `cnpj`                VARCHAR(18)     NULL COMMENT 'CNPJ numérico ou alfanumérico formatado',
+    `cpf`                 VARCHAR(14)     NULL COMMENT 'CPF formatado',
     `inscricao_estadual`  VARCHAR(30)     NULL     COMMENT 'Inscrição Estadual ou ISENTO',
     `razao_social`        VARCHAR(255)    NOT NULL,
     `nome_fantasia`       VARCHAR(255)    NULL,
@@ -154,7 +156,9 @@ CREATE TABLE `empresas` (
     `atualizado_em`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_empresas_cnpj` (`cnpj`),
+    UNIQUE KEY `uk_empresas_cpf` (`cpf`),
     UNIQUE KEY `uk_empresas_codigo` (`codigo`),
+    INDEX `idx_empresas_tipo_pessoa` (`tipo_pessoa`),
     INDEX `idx_empresas_status` (`status`),
     INDEX `idx_empresas_razao_social` (`razao_social`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -326,10 +330,10 @@ SET @uuid_user_joao       = '11111111-1111-1111-1111-111111111111';
 SET @uuid_user_maria      = '22222222-2222-2222-2222-222222222222';
 
 -- Empresa master (dona do sistema)
-INSERT INTO `empresas` (`id`, `codigo`, `cnpj`, `inscricao_estadual`, `razao_social`, `nome_fantasia`, `email`, `telefone`,
+INSERT INTO `empresas` (`id`, `tipo_pessoa`, `codigo`, `cnpj`, `cpf`, `inscricao_estadual`, `razao_social`, `nome_fantasia`, `email`, `telefone`,
     `cep`, `logradouro`, `numero`, `complemento`, `bairro`, `cidade`, `uf`, `logo`, `observacoes`, `status`)
 VALUES
-(@uuid_empresa_master, 'EMP-0001', '12.345.678/0001-90', '123.456.789.000', 'Empresa Alpha Ltda', 'Alpha Tech',
+(@uuid_empresa_master, 'PJ', 'EMP-0001', '12.345.678/0001-90', NULL, '123.456.789.000', 'Empresa Alpha Ltda', 'Alpha Tech',
  'contato@alphatech.com.br', '(11) 99999-1111',
  '01001-000', 'Rua Augusta', '1500', 'Sala 301', 'Consolação', 'São Paulo', 'SP',
  NULL, 'Empresa principal do grupo. Sede administrativa em São Paulo.', 'ativo');
@@ -340,10 +344,10 @@ INSERT INTO `empresa_contatos` (`id`, `empresa_id`, `nome`, `email`, `telefone`,
 (UUID(), @uuid_empresa_master, 'Carla Souza', 'carla@alphatech.com.br', '(11) 99999-1102', 'Financeiro');
 
 -- Empresa cliente de exemplo
-INSERT INTO `empresas` (`id`, `codigo`, `cnpj`, `inscricao_estadual`, `razao_social`, `nome_fantasia`, `email`, `telefone`,
+INSERT INTO `empresas` (`id`, `tipo_pessoa`, `codigo`, `cnpj`, `cpf`, `inscricao_estadual`, `razao_social`, `nome_fantasia`, `email`, `telefone`,
     `cep`, `logradouro`, `numero`, `complemento`, `bairro`, `cidade`, `uf`, `logo`, `observacoes`, `status`)
 VALUES
-(@uuid_empresa_beta, 'EMP-0002', '98.765.432/0001-10', '987.654.321.000', 'Beta Comércio S/A', 'Beta Store',
+(@uuid_empresa_beta, 'PJ', 'EMP-0002', '98.765.432/0001-10', NULL, '987.654.321.000', 'Beta Comércio S/A', 'Beta Store',
  'financeiro@betastore.com.br', '(21) 98888-2222',
  '20040-020', 'Av. Rio Branco', '100', '10º andar', 'Centro', 'Rio de Janeiro', 'RJ',
  NULL, 'Loja virtual e física no Centro do Rio.', 'ativo');
@@ -368,7 +372,10 @@ INSERT INTO `perfil_permissoes` (`id`, `perfil_id`, `modulo`, `acao`) VALUES
 (UUID(), @uuid_perfil_admin, 'usuarios',  'excluir'),
 (UUID(), @uuid_perfil_admin, 'perfis',    'visualizar'), (UUID(), @uuid_perfil_admin, 'perfis',    'criar'),
 (UUID(), @uuid_perfil_admin, 'perfis',    'editar'),     (UUID(), @uuid_perfil_admin, 'perfis',    'bloquear'),
-(UUID(), @uuid_perfil_admin, 'perfis',    'excluir');
+(UUID(), @uuid_perfil_admin, 'perfis',    'excluir'),
+(UUID(), @uuid_perfil_admin, 'categorias', 'visualizar'), (UUID(), @uuid_perfil_admin, 'categorias', 'criar'),
+(UUID(), @uuid_perfil_admin, 'categorias', 'editar'),     (UUID(), @uuid_perfil_admin, 'categorias', 'bloquear'),
+(UUID(), @uuid_perfil_admin, 'categorias', 'excluir');
 
 -- Permissões do perfil Gerente
 INSERT INTO `perfil_permissoes` (`id`, `perfil_id`, `modulo`, `acao`) VALUES

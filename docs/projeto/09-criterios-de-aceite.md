@@ -61,6 +61,27 @@ Para cada funcionalidade, os cenários são descritos como:
 
 ---
 
+## 2.1 Empresas/Tenants PF e PJ (RF-010A)
+
+### CF-002A — Criar tenant PJ
+- **Dado** admin selecionando `Pessoa Jurídica` e informando CNPJ único
+- **Quando** salva o cadastro
+- **Então** empresa é gravada com `tipo_pessoa = PJ`, CNPJ preenchido, CPF nulo e inscrição estadual permitida
+
+### CF-002B — Criar tenant PF/profissional liberal
+- **Dado** admin selecionando `Pessoa Física` e informando CPF único
+- **Quando** salva o cadastro sem CNPJ
+- **Então** empresa é gravada com `tipo_pessoa = PF`, CPF preenchido, CNPJ nulo e inscrição estadual nula
+
+### CE-005A — Documento obrigatório por tipo
+- **Dado** tenant PJ sem CNPJ ou tenant PF sem CPF
+- **Quando** tenta salvar
+- **Então** o formulário exibe erro no documento obrigatório do tipo selecionado e nenhum registro inválido é gravado
+
+**CH-EMP-PF:** Cadastro, edição, busca, listagem e logs exibem o documento correto por tipo; testes de empresas e integridade cobrem PF e PJ.
+
+---
+
 ## 3. Contas a Receber (RF-011 a RF-016)
 
 ### CF-003 — Criar conta a receber com 3 parcelas

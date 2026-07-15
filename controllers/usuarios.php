@@ -20,13 +20,40 @@ function buscar_empresas_para_select(): array {
     $pdo = db();
 
     if (can_see_all_empresas()) {
-        $stmt = $pdo->query("SELECT id, nome_fantasia FROM empresas WHERE status = 'ativo' ORDER BY nome_fantasia ASC");
+        $stmt = $pdo->query("
+            SELECT id, codigo, tipo_pessoa, razao_social, nome_fantasia
+            FROM empresas
+            WHERE status = 'ativo'
+            ORDER BY COALESCE(NULLIF(nome_fantasia, ''), razao_social) ASC
+        ");
         return $stmt->fetchAll();
     }
 
-    $stmt = $pdo->prepare("SELECT id, nome_fantasia FROM empresas WHERE id = :id LIMIT 1");
+    $stmt = $pdo->prepare("
+        SELECT id, codigo, tipo_pessoa, razao_social, nome_fantasia
+        FROM empresas
+        WHERE id = :id
+        LIMIT 1
+    ");
     $stmt->execute([':id' => current_empresa_id()]);
     return $stmt->fetchAll();
+}
+
+function empresa_label_usuario(array $empresa): string {
+    $nome = trim((string) ($empresa['nome_fantasia'] ?? ''));
+    if ($nome === '') {
+        $nome = trim((string) ($empresa['razao_social'] ?? ''));
+    }
+
+    $codigo = trim((string) ($empresa['codigo'] ?? ''));
+    $tipoPessoa = trim((string) ($empresa['tipo_pessoa'] ?? ''));
+    $sufixo = trim($codigo . ($tipoPessoa !== '' ? ' / ' . $tipoPessoa : ''));
+
+    if ($sufixo === '') {
+        return $nome;
+    }
+
+    return $nome !== '' ? $nome . ' (' . $sufixo . ')' : $sufixo;
 }
 
 function buscar_perfis_para_select(): array {
@@ -221,6 +248,13 @@ function validar_usuario(array $dados, bool $isEdit = false): array {
 
     if ($empresaId === '') {
         $erros['empresa_id'] = 'Selecione uma empresa.';
+    } else {
+        $pdo = db();
+        $stmt = $pdo->prepare("SELECT id FROM empresas WHERE id = :id AND status = 'ativo' LIMIT 1");
+        $stmt->execute([':id' => $empresaId]);
+        if (!$stmt->fetch()) {
+            $erros['empresa_id'] = 'Selecione uma empresa ativa.';
+        }
     }
 
     if ($perfilId === '') {

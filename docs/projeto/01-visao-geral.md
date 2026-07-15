@@ -71,3 +71,11 @@ Empresas de pequeno e médio porte têm dificuldade para acompanhar contas a rec
 - **Sem data limite:** entregas incrementais por funcionalidade completa
 - **LGPD:** sistema trata dados pessoais (CPF, e-mail, telefone) — conformidade obrigatória
 - **Integrações de pagamento real** (boleto, PIX, cartão) ficam fora do MVP; o MVP usa apenas registro manual de baixa
+
+---
+
+## 7. Atualização 2026-07-14 — Tenants PF e PJ
+
+O cadastro de tenants passa a aceitar pessoa jurídica e pessoa física/profissional liberal. Tenants PJ continuam usando CNPJ obrigatório; tenants PF usam CPF obrigatório e podem operar sem CNPJ e sem inscrição estadual.
+
+A compatibilidade com tenants PJ existentes é mantida por default `PJ` na coluna `empresas.tipo_pessoa`, preservando isolamento multiempresa, login, alternância de empresa e permissões.

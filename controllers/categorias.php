@@ -19,6 +19,10 @@ function validar_csrf_categorias(): bool
 
 switch ($action) {
     case 'create':
+        if (!can_user('categorias', 'criar')) {
+            set_flash('danger', __('common.acesso_negado'));
+            redirect(url('categorias'));
+        }
         $categoria = null;
         $isEdit = false;
         $errors = [];
@@ -26,6 +30,10 @@ switch ($action) {
         break;
 
     case 'edit':
+        if (!can_user('categorias', 'editar')) {
+            set_flash('danger', __('common.acesso_negado'));
+            redirect(url('categorias'));
+        }
         $id = (string) ($_GET['id'] ?? '');
         $categoria = $id !== '' ? CategoriasFinanceiras::buscarPorId($id, $empresaId) : null;
         if (!$categoria) {
@@ -105,6 +113,10 @@ switch ($action) {
 
     case 'index':
     default:
+        if (!can_user('categorias', 'visualizar')) {
+            set_flash('danger', __('common.acesso_negado'));
+            redirect(url('dashboard'));
+        }
         $filtros = [
             'busca' => trim((string) ($_GET['busca'] ?? '')),
             'tipo' => trim((string) ($_GET['tipo'] ?? '')),

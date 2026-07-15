@@ -5,6 +5,10 @@
  */
 $errors = $errors ?? [];
 $pageTitle = $isEdit ? __('empresas.edit') : __('empresas.new');
+$tipoPessoaEmpresa = strtoupper((string) ($empresa['tipo_pessoa'] ?? 'PJ'));
+if (!in_array($tipoPessoaEmpresa, ['PF', 'PJ'], true)) {
+    $tipoPessoaEmpresa = 'PJ';
+}
 require __DIR__ . '/../layout/header.php';
 require __DIR__ . '/../layout/sidebar.php';
 ?>
@@ -80,16 +84,31 @@ require __DIR__ . '/../layout/sidebar.php';
     <div class="form-section">
         <div class="form-section-title"><?= e(__('empresas.title')) ?></div>
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <label for="tipo_pessoa" class="form-label"><?= e(__('empresas.tipo_pessoa')) ?> <span class="text-danger">*</span></label>
+                <select class="form-select <?= isset($errors['tipo_pessoa']) ? 'is-invalid' : '' ?>" id="tipo_pessoa" name="tipo_pessoa" required>
+                    <option value="PJ" <?= $tipoPessoaEmpresa === 'PJ' ? 'selected' : '' ?>><?= e(__('empresas.pj')) ?></option>
+                    <option value="PF" <?= $tipoPessoaEmpresa === 'PF' ? 'selected' : '' ?>><?= e(__('empresas.pf')) ?></option>
+                </select>
+                <?php if (isset($errors['tipo_pessoa'])): ?><div class="invalid-feedback"><?= e($errors['tipo_pessoa']) ?></div><?php endif; ?>
+            </div>
+            <div class="col-md-3 js-pj-field">
                 <label for="cnpj" class="form-label"><?= e(__('empresas.cnpj')) ?> <span class="text-danger">*</span></label>
                 <input type="text" class="form-control text-uppercase <?= isset($errors['cnpj']) ? 'is-invalid' : '' ?>" id="cnpj" name="cnpj"
-                       value="<?= e($empresa['cnpj'] ?? '') ?>" required maxlength="18"
+                       value="<?= e($empresa['cnpj'] ?? '') ?>" maxlength="18"
                        placeholder="00.000.000/0000-00"
                        style="text-transform: uppercase;">
                 <div class="form-text"><?= e(__('empresas.cnpj_hint')) ?></div>
                 <?php if (isset($errors['cnpj'])): ?><div class="invalid-feedback"><?= e($errors['cnpj']) ?></div><?php endif; ?>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3 js-pf-field">
+                <label for="cpf" class="form-label"><?= e(__('empresas.cpf')) ?> <span class="text-danger">*</span></label>
+                <input type="text" class="form-control <?= isset($errors['cpf']) ? 'is-invalid' : '' ?>" id="cpf" name="cpf"
+                       value="<?= e($empresa['cpf'] ?? '') ?>" maxlength="14"
+                       placeholder="000.000.000-00">
+                <?php if (isset($errors['cpf'])): ?><div class="invalid-feedback"><?= e($errors['cpf']) ?></div><?php endif; ?>
+            </div>
+            <div class="col-md-3 js-pj-field">
                 <label for="inscricao_estadual" class="form-label"><?= e(__('empresas.inscricao_estadual')) ?></label>
                 <div class="input-group">
                     <input type="text" class="form-control" id="inscricao_estadual" name="inscricao_estadual"
@@ -102,7 +121,7 @@ require __DIR__ . '/../layout/sidebar.php';
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="razao_social" class="form-label"><?= e(__('empresas.razao_social')) ?> <span class="text-danger">*</span></label>
                 <input type="text" class="form-control <?= isset($errors['razao_social']) ? 'is-invalid' : '' ?>" id="razao_social" name="razao_social"
                        value="<?= e($empresa['razao_social'] ?? '') ?>" required>
@@ -294,11 +313,53 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- Tipo de pessoa ---
+    const tipoPessoa = document.getElementById('tipo_pessoa');
+    const cnpjInput = document.getElementById('cnpj');
+    const cpfInput = document.getElementById('cpf');
+    const pjFields = document.querySelectorAll('.js-pj-field');
+    const pfFields = document.querySelectorAll('.js-pf-field');
+
+    function toggleTipoPessoa() {
+        const isPF = tipoPessoa && tipoPessoa.value === 'PF';
+        pjFields.forEach(function(field) {
+            field.classList.toggle('d-none', isPF);
+        });
+        pfFields.forEach(function(field) {
+            field.classList.toggle('d-none', !isPF);
+        });
+        if (cnpjInput) {
+            cnpjInput.required = !isPF;
+            if (isPF) cnpjInput.value = '';
+        }
+        if (cpfInput) {
+            cpfInput.required = isPF;
+            if (!isPF) cpfInput.value = '';
+        }
+        if (ieInput) {
+            ieInput.disabled = isPF;
+            if (isPF) ieInput.value = '';
+        }
+        if (ieIsento) {
+            ieIsento.disabled = isPF;
+            if (isPF) ieIsento.checked = false;
+        }
+    }
+
+    if (tipoPessoa) {
+        tipoPessoa.addEventListener('change', toggleTipoPessoa);
+    }
+
     // --- Checkbox IE Isento ---
     const ieIsento = document.getElementById('ie_isento');
     const ieInput = document.getElementById('inscricao_estadual');
     if (ieIsento && ieInput) {
         function toggleIE() {
+            if (tipoPessoa && tipoPessoa.value === 'PF') {
+                ieInput.value = '';
+                ieInput.readOnly = true;
+                return;
+            }
             if (ieIsento.checked) {
                 ieInput.value = 'ISENTO';
                 ieInput.readOnly = true;
@@ -310,6 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleIE();
         ieIsento.addEventListener('change', toggleIE);
     }
+    toggleTipoPessoa();
 
     // --- Contatos dinâmicos ---
     const container = document.getElementById('contatos-container');

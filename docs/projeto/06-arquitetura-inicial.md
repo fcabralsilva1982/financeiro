@@ -150,6 +150,8 @@ Configuração de cron (exemplo):
 | `contas_receber_historico` | Histórico de eventos da régua e baixas |
 | `contas_receber_regua` | Configuração da régua de cobrança por empresa |
 
+`empresas` identifica o tipo do tenant em `tipo_pessoa ENUM('PF','PJ') DEFAULT 'PJ'`. Para PJ, `cnpj` é obrigatório pela regra de negócio e possui índice único com nulos permitidos; para PF/profissional liberal, `cpf` é obrigatório pela regra de negócio, único e `cnpj` fica nulo.
+
 ### 4.2 Tabelas a criar
 
 | Tabela | Propósito |

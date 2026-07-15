@@ -119,7 +119,9 @@ abstract class DatabaseTestCase extends BaseTestCase
         $data = array_merge([
             'id'             => generate_uuid(),
             'codigo'         => 'EMP-' . str_pad((string) rand(1, 9999), 4, '0', STR_PAD_LEFT),
+            'tipo_pessoa'    => 'PJ',
             'cnpj'           => (string) rand(10000000000000, 99999999999999),
+            'cpf'            => null,
             'razao_social'   => 'Empresa Teste ' . rand(1, 1000),
             'nome_fantasia'  => 'Teste',
             'email'          => 'test' . rand(1, 9999) . '@test.com',
@@ -127,13 +129,15 @@ abstract class DatabaseTestCase extends BaseTestCase
         ], $override);
 
         $stmt = static::$pdo->prepare("
-            INSERT INTO empresas (id, codigo, cnpj, razao_social, nome_fantasia, email, status)
-            VALUES (:id, :codigo, :cnpj, :razao_social, :nome_fantasia, :email, :status)
+            INSERT INTO empresas (id, codigo, tipo_pessoa, cnpj, cpf, razao_social, nome_fantasia, email, status)
+            VALUES (:id, :codigo, :tipo_pessoa, :cnpj, :cpf, :razao_social, :nome_fantasia, :email, :status)
         ");
         $stmt->execute([
             ':id'             => $data['id'],
             ':codigo'         => $data['codigo'],
+            ':tipo_pessoa'    => $data['tipo_pessoa'],
             ':cnpj'           => $data['cnpj'],
+            ':cpf'            => $data['cpf'],
             ':razao_social'   => $data['razao_social'],
             ':nome_fantasia'  => $data['nome_fantasia'],
             ':email'          => $data['email'],
@@ -221,12 +225,22 @@ abstract class DatabaseTestCase extends BaseTestCase
     private static function createTables(PDO $pdo): void
     {
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+        $pdo->exec("DROP TABLE IF EXISTS `usuario_termos`");
+        $pdo->exec("DROP TABLE IF EXISTS `log_acoes`");
+        $pdo->exec("DROP TABLE IF EXISTS `usuario_empresa`");
+        $pdo->exec("DROP TABLE IF EXISTS `perfil_permissoes`");
+        $pdo->exec("DROP TABLE IF EXISTS `empresa_contatos`");
+        $pdo->exec("DROP TABLE IF EXISTS `usuarios`");
+        $pdo->exec("DROP TABLE IF EXISTS `perfis`");
+        $pdo->exec("DROP TABLE IF EXISTS `empresas`");
 
         // Empresas
         $pdo->exec("CREATE TABLE IF NOT EXISTS `empresas` (
             `id`                  CHAR(36)        NOT NULL,
             `codigo`              VARCHAR(20)     NOT NULL,
-            `cnpj`                VARCHAR(18)     NOT NULL,
+            `tipo_pessoa`         ENUM('PF','PJ') NOT NULL DEFAULT 'PJ',
+            `cnpj`                VARCHAR(18)     NULL,
+            `cpf`                 VARCHAR(14)     NULL,
             `inscricao_estadual`  VARCHAR(30)     NULL,
             `razao_social`        VARCHAR(255)    NOT NULL,
             `nome_fantasia`       VARCHAR(255)    NULL,
@@ -247,6 +261,7 @@ abstract class DatabaseTestCase extends BaseTestCase
             `atualizado_em`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`),
             UNIQUE KEY `uk_empresas_cnpj` (`cnpj`),
+            UNIQUE KEY `uk_empresas_cpf` (`cpf`),
             UNIQUE KEY `uk_empresas_codigo` (`codigo`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 

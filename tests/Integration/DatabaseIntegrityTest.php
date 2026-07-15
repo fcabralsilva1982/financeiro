@@ -23,6 +23,42 @@ class DatabaseIntegrityTest extends DatabaseTestCase
         $this->insertEmpresa(['codigo' => 'EMP-0002', 'cnpj' => '12345678901234']);
     }
 
+    public function test_empresa_cpf_unico(): void
+    {
+        $this->insertEmpresa([
+            'codigo' => 'EMP-0001',
+            'tipo_pessoa' => 'PF',
+            'cnpj' => null,
+            'cpf' => '123.456.789-01',
+        ]);
+
+        $this->expectException(\PDOException::class);
+        $this->insertEmpresa([
+            'codigo' => 'EMP-0002',
+            'tipo_pessoa' => 'PF',
+            'cnpj' => null,
+            'cpf' => '123.456.789-01',
+        ]);
+    }
+
+    public function test_empresa_pf_sem_cnpj_permitida(): void
+    {
+        $empresa = $this->insertEmpresa([
+            'codigo' => 'EMP-0001',
+            'tipo_pessoa' => 'PF',
+            'cnpj' => null,
+            'cpf' => '987.654.321-00',
+        ]);
+
+        $stmt = $this->db()->prepare('SELECT tipo_pessoa, cnpj, cpf FROM empresas WHERE id = :id');
+        $stmt->execute([':id' => $empresa['id']]);
+        $row = $stmt->fetch();
+
+        $this->assertSame('PF', $row['tipo_pessoa']);
+        $this->assertNull($row['cnpj']);
+        $this->assertSame('987.654.321-00', $row['cpf']);
+    }
+
     public function test_empresa_codigo_unico(): void
     {
         $this->insertEmpresa(['codigo' => 'EMP-0001', 'cnpj' => '11111111111111']);

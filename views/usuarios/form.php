@@ -3,6 +3,7 @@
  * View: Formulário de Usuário (criar/editar)
  * Variáveis esperadas: $usuario (array|null), $isEdit (bool), $empresasMock (array), $perfisMock (array)
  */
+$errors = $errors ?? [];
 $pageTitle = $isEdit ? __('usuarios.edit') : __('usuarios.new');
 require __DIR__ . '/../layout/header.php';
 require __DIR__ . '/../layout/sidebar.php';
@@ -18,6 +19,17 @@ require __DIR__ . '/../layout/sidebar.php';
     </a>
 </div>
 
+<?php if (!empty($errors)): ?>
+<div class="alert alert-danger">
+    <i class="bi bi-exclamation-triangle me-2"></i><strong><?= e(__('empresas.erro_validacao')) ?></strong>
+    <ul class="mb-0 mt-1">
+        <?php foreach ($errors as $msg): ?>
+            <li><?= e($msg) ?></li>
+        <?php endforeach; ?>
+    </ul>
+</div>
+<?php endif; ?>
+
 <form action="<?= url('usuarios', 'store') ?>" method="POST">
     <?= csrf_field() ?>
     <?php if ($isEdit): ?>
@@ -31,13 +43,15 @@ require __DIR__ . '/../layout/sidebar.php';
         <div class="row g-3">
             <div class="col-md-6">
                 <label for="nome" class="form-label"><?= e(__('usuarios.nome')) ?> <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="nome" name="nome"
+                <input type="text" class="form-control <?= isset($errors['nome']) ? 'is-invalid' : '' ?>" id="nome" name="nome"
                        value="<?= e($usuario['nome'] ?? '') ?>" required>
+                <?php if (isset($errors['nome'])): ?><div class="invalid-feedback"><?= e($errors['nome']) ?></div><?php endif; ?>
             </div>
             <div class="col-md-6">
                 <label for="email" class="form-label"><?= e(__('usuarios.email')) ?> <span class="text-danger">*</span></label>
-                <input type="email" class="form-control" id="email" name="email"
+                <input type="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" id="email" name="email"
                        value="<?= e($usuario['email'] ?? '') ?>" required>
+                <?php if (isset($errors['email'])): ?><div class="invalid-feedback"><?= e($errors['email']) ?></div><?php endif; ?>
             </div>
         </div>
 
@@ -68,13 +82,15 @@ require __DIR__ . '/../layout/sidebar.php';
             <?php endif; ?>
             <div class="col-md-6 <?= $isEdit ? 'senha-fields d-none' : '' ?>">
                 <label for="senha" class="form-label"><?= e(__('usuarios.senha')) ?> <?php if (!$isEdit): ?><span class="text-danger">*</span><?php endif; ?></label>
-                <input type="password" class="form-control" id="senha" name="senha"
+                <input type="password" class="form-control <?= isset($errors['senha']) ? 'is-invalid' : '' ?>" id="senha" name="senha"
                        <?= !$isEdit ? 'required' : '' ?>>
+                <?php if (isset($errors['senha'])): ?><div class="invalid-feedback"><?= e($errors['senha']) ?></div><?php endif; ?>
             </div>
             <div class="col-md-6 <?= $isEdit ? 'senha-fields d-none' : '' ?>">
                 <label for="confirmar_senha" class="form-label"><?= e(__('usuarios.confirmar_senha')) ?> <?php if (!$isEdit): ?><span class="text-danger">*</span><?php endif; ?></label>
-                <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha"
+                <input type="password" class="form-control <?= isset($errors['confirmar_senha']) ? 'is-invalid' : '' ?>" id="confirmar_senha" name="confirmar_senha"
                        <?= !$isEdit ? 'required' : '' ?>>
+                <?php if (isset($errors['confirmar_senha'])): ?><div class="invalid-feedback"><?= e($errors['confirmar_senha']) ?></div><?php endif; ?>
             </div>
         </div>
     </div>
@@ -86,17 +102,18 @@ require __DIR__ . '/../layout/sidebar.php';
             <div class="col-md-4">
                 <label for="empresa_id" class="form-label"><?= e(__('usuarios.empresa')) ?> <span class="text-danger">*</span></label>
                 <?php if (can_see_all_empresas()): ?>
-                <select class="form-select" id="empresa_id" name="empresa_id" required>
+                <select class="form-select <?= isset($errors['empresa_id']) ? 'is-invalid' : '' ?>" id="empresa_id" name="empresa_id" required>
                     <option value=""><?= e(__('common.selecione')) ?></option>
                     <?php if (!empty($empresasMock)): ?>
                         <?php foreach ($empresasMock as $emp): ?>
                             <option value="<?= e($emp['id']) ?>"
                                 <?= ($usuario['empresa_id'] ?? '') == $emp['id'] ? 'selected' : '' ?>>
-                                <?= e($emp['nome_fantasia']) ?>
+                                <?= e(empresa_label_usuario($emp)) ?>
                             </option>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </select>
+                <?php if (isset($errors['empresa_id'])): ?><div class="invalid-feedback"><?= e($errors['empresa_id']) ?></div><?php endif; ?>
                 <?php else: ?>
                 <!-- Empresa fixa: usuário só pode cadastrar na própria empresa -->
                 <input type="hidden" name="empresa_id" value="<?= e(current_empresa_id()) ?>">
@@ -105,7 +122,7 @@ require __DIR__ . '/../layout/sidebar.php';
             </div>
             <div class="col-md-4">
                 <label for="perfil_id" class="form-label"><?= e(__('usuarios.perfil')) ?> <span class="text-danger">*</span></label>
-                <select class="form-select" id="perfil_id" name="perfil_id" required>
+                <select class="form-select <?= isset($errors['perfil_id']) ? 'is-invalid' : '' ?>" id="perfil_id" name="perfil_id" required>
                     <option value=""><?= e(__('common.selecione')) ?></option>
                     <?php if (!empty($perfisMock)): ?>
                         <?php foreach ($perfisMock as $perfil): ?>
@@ -116,6 +133,7 @@ require __DIR__ . '/../layout/sidebar.php';
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </select>
+                <?php if (isset($errors['perfil_id'])): ?><div class="invalid-feedback"><?= e($errors['perfil_id']) ?></div><?php endif; ?>
             </div>
             <?php if ($isEdit): ?>
             <div class="col-md-4">

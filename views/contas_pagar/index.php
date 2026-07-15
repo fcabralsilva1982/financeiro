@@ -57,7 +57,9 @@ require __DIR__ . '/../layout/sidebar.php';
         <div class="col-md-12">
             <button type="submit" class="btn btn-sm btn-primary me-1"><i class="bi bi-funnel me-1"></i>Filtrar</button>
             <a href="<?= url('contas_pagar') ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg me-1"></i>Limpar</a>
+            <?php if (can_user('categorias', 'visualizar')): ?>
             <a href="<?= url('categorias') ?>" class="btn btn-sm btn-outline-dark"><i class="bi bi-tags me-1"></i>Categorias</a>
+            <?php endif; ?>
         </div>
     </div>
 </form>

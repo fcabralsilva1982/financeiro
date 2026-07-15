@@ -63,11 +63,13 @@
                             <i class="bi bi-arrow-up-circle me-2"></i><?= e(__('menu.contas_pagar')) ?>
                         </a>
                     </li>
+                    <?php if (can_user('categorias', 'visualizar')): ?>
                     <li class="nav-item">
                         <a class="nav-link <?= selected_menu('categorias') ?>" href="<?= url('categorias') ?>">
                             <i class="bi bi-tags me-2"></i><?= e(__('menu.categorias')) ?>
                         </a>
                     </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </li>

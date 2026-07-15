@@ -36,6 +36,7 @@
 | RF-008 | Admin deve poder bloquear e desbloquear usuários. Usuário bloqueado não pode autenticar. | Alta | Segurança | Status `bloqueado` impede login; log registrado |
 | RF-009 | Admin deve poder excluir usuário que não possui lançamentos financeiros vinculados. | Média | Integridade | Exclusão negada se existirem contas a receber/pagar com `usuario_id`; soft-delete não aplicável aqui |
 | RF-010 | Admin deve poder vincular um usuário a múltiplas empresas com perfis distintos por empresa. | Alta | Multiempresa | Registro em `usuario_empresa` para cada par usuário-empresa; perfil diferente permitido por empresa |
+| RF-010A | Admin deve cadastrar tenants como PJ ou PF/profissional liberal. PJ exige CNPJ; PF exige CPF e pode não possuir CNPJ. | Alta | BL-PF-001 a BL-PF-010 | `empresas.tipo_pessoa` define o documento obrigatório; listagem e busca localizam CPF ou CNPJ; compatibilidade com tenants PJ existentes preservada |
 
 ---
 

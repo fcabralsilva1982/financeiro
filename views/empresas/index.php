@@ -59,7 +59,8 @@ require __DIR__ . '/../layout/sidebar.php';
             <tr>
                 <th style="width: 110px;"><?= e(__('common.codigo')) ?></th>
                 <th style="width: 50px;"><?= e(__('empresas.logo')) ?></th>
-                <th><?= e(__('empresas.cnpj')) ?></th>
+                <th style="width: 90px;"><?= e(__('empresas.tipo_pessoa')) ?></th>
+                <th><?= e(__('empresas.documento')) ?></th>
                 <th><?= e(__('empresas.razao_social')) ?></th>
                 <th><?= e(__('empresas.nome_fantasia')) ?></th>
                 <th style="width: 110px;"><?= e(__('empresas.status')) ?></th>
@@ -84,7 +85,8 @@ require __DIR__ . '/../layout/sidebar.php';
                             <span class="table-logo-placeholder rounded"><i class="bi bi-building"></i></span>
                         <?php endif; ?>
                     </td>
-                    <td><?= e($empresa['cnpj']) ?></td>
+                    <td><?= e($empresa['tipo_pessoa'] ?? 'PJ') ?></td>
+                    <td><?= e(documento_empresa($empresa)) ?></td>
                     <td><?= e($empresa['razao_social']) ?></td>
                     <td><?= e($empresa['nome_fantasia']) ?></td>
                     <td>
@@ -136,7 +138,7 @@ require __DIR__ . '/../layout/sidebar.php';
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">
+                    <td colspan="8" class="text-center text-muted py-4">
                         <i class="bi bi-inbox me-1"></i><?= e(__('common.nenhum_registro')) ?>
                     </td>
                 </tr>
