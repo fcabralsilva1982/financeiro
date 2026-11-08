@@ -269,4 +269,177 @@ class ConciliacaoTest extends DatabaseTestCase
         $this->assertSame('movimento_interno', $transacaoAtualizada['status_conciliacao']);
         $this->assertSame('movimento_interno', $transacaoAtualizada['origem_match']);
     }
+
+    public function test_matching_automatico_concilia_credito_com_conta_receber_unica(): void
+    {
+        $empresa = $this->insertEmpresa([
+            'codigo' => 'EMP-3004',
+            'cnpj' => '62345678000144',
+        ]);
+        $perfil = $this->insertPerfil(['nome' => 'Administrador Conciliação 4']);
+        $usuario = $this->insertUsuario($empresa['id'], $perfil['id']);
+
+        $contaReceberId = generate_uuid();
+        $this->db()->prepare(
+            "INSERT INTO contas_receber (
+                id, empresa_id, cliente_id, codigo, descricao, valor_total,
+                data_emissao, data_vencimento, forma_cobranca, status
+            ) VALUES (
+                :id, :empresa_id, :cliente_id, :codigo, :descricao, :valor_total,
+                :data_emissao, :data_vencimento, :forma_cobranca, :status
+            )"
+        )->execute([
+            ':id' => $contaReceberId,
+            ':empresa_id' => $empresa['id'],
+            ':cliente_id' => generate_uuid(),
+            ':codigo' => 'CR-3004',
+            ':descricao' => 'Receita de serviço mensal',
+            ':valor_total' => 250.00,
+            ':data_emissao' => '2026-07-10',
+            ':data_vencimento' => '2026-07-15',
+            ':forma_cobranca' => 'pix',
+            ':status' => 'emitida',
+        ]);
+
+        $importacao = Conciliacao::criarImportacao($empresa['id'], $usuario['id'], 'extrato_credito.ofx', [
+            [
+                'fitid' => 'FIT-MATCH-CR-001',
+                'data_movimento' => '2026-07-16',
+                'valor' => 250.00,
+                'tipo_movimento' => 'credito',
+                'descricao_banco' => 'PIX RECEBIDO CLIENTE',
+                'memo' => 'Serviço mensal',
+            ],
+        ]);
+
+        $resultado = Conciliacao::executarMatchingAutomatico((string) $importacao['id'], $empresa['id'], $usuario['id']);
+        $transacao = Conciliacao::listarTransacoes((string) $importacao['id'], $empresa['id'])[0];
+        $importacaoAtualizada = Conciliacao::buscarImportacao((string) $importacao['id'], $empresa['id']);
+
+        $this->assertSame(1, (int) $resultado['conciliadas_auto']);
+        $this->assertSame('conciliado_auto', $transacao['status_conciliacao']);
+        $this->assertSame('conta_receber', $transacao['origem_match']);
+        $this->assertSame($contaReceberId, $transacao['conta_receber_id']);
+        $this->assertNotNull($importacaoAtualizada);
+        $this->assertSame(1, (int) $importacaoAtualizada['quantidade_conciliadas_auto']);
+        $this->assertSame(0, (int) $importacaoAtualizada['quantidade_pendentes']);
+    }
+
+    public function test_matching_automatico_concilia_debito_com_parcela_conta_pagar_unica(): void
+    {
+        $empresa = $this->insertEmpresa([
+            'codigo' => 'EMP-3005',
+            'cnpj' => '72345678000133',
+        ]);
+        $perfil = $this->insertPerfil(['nome' => 'Administrador Conciliação 5']);
+        $usuario = $this->insertUsuario($empresa['id'], $perfil['id']);
+
+        $contaPagarId = generate_uuid();
+        $this->db()->prepare(
+            "INSERT INTO contas_pagar (
+                id, empresa_id, fornecedor_id, codigo, descricao, valor_total,
+                data_emissao, data_vencimento, forma_pagamento, status
+            ) VALUES (
+                :id, :empresa_id, :fornecedor_id, :codigo, :descricao, :valor_total,
+                :data_emissao, :data_vencimento, :forma_pagamento, :status
+            )"
+        )->execute([
+            ':id' => $contaPagarId,
+            ':empresa_id' => $empresa['id'],
+            ':fornecedor_id' => generate_uuid(),
+            ':codigo' => 'CP-3005',
+            ':descricao' => 'Pagamento fornecedor de insumos',
+            ':valor_total' => 480.00,
+            ':data_emissao' => '2026-07-10',
+            ':data_vencimento' => '2026-07-15',
+            ':forma_pagamento' => 'pix',
+            ':status' => 'aprovada',
+        ]);
+
+        $parcelaId = generate_uuid();
+        $this->db()->prepare(
+            "INSERT INTO contas_pagar_parcelas (
+                id, conta_pagar_id, numero_parcela, valor, data_vencimento, status
+            ) VALUES (
+                :id, :conta_pagar_id, :numero_parcela, :valor, :data_vencimento, :status
+            )"
+        )->execute([
+            ':id' => $parcelaId,
+            ':conta_pagar_id' => $contaPagarId,
+            ':numero_parcela' => 1,
+            ':valor' => 480.00,
+            ':data_vencimento' => '2026-07-15',
+            ':status' => 'pendente',
+        ]);
+
+        $importacao = Conciliacao::criarImportacao($empresa['id'], $usuario['id'], 'extrato_debito.ofx', [
+            [
+                'fitid' => 'FIT-MATCH-CP-001',
+                'data_movimento' => '2026-07-16',
+                'valor' => 480.00,
+                'tipo_movimento' => 'debito',
+                'descricao_banco' => 'PIX ENVIADO FORNECEDOR',
+                'memo' => 'Insumos',
+            ],
+        ]);
+
+        $resultado = Conciliacao::executarMatchingAutomatico((string) $importacao['id'], $empresa['id'], $usuario['id']);
+        $transacao = Conciliacao::listarTransacoes((string) $importacao['id'], $empresa['id'])[0];
+
+        $this->assertSame(1, (int) $resultado['conciliadas_auto']);
+        $this->assertSame('conciliado_auto', $transacao['status_conciliacao']);
+        $this->assertSame('conta_pagar', $transacao['origem_match']);
+        $this->assertSame($parcelaId, $transacao['conta_pagar_parcela_id']);
+    }
+
+    public function test_matching_automatico_nao_concilia_quando_ha_ambiguidade(): void
+    {
+        $empresa = $this->insertEmpresa([
+            'codigo' => 'EMP-3006',
+            'cnpj' => '82345678000122',
+        ]);
+        $perfil = $this->insertPerfil(['nome' => 'Administrador Conciliação 6']);
+        $usuario = $this->insertUsuario($empresa['id'], $perfil['id']);
+
+        for ($i = 1; $i <= 2; $i++) {
+            $this->db()->prepare(
+                "INSERT INTO contas_receber (
+                    id, empresa_id, cliente_id, codigo, descricao, valor_total,
+                    data_emissao, data_vencimento, forma_cobranca, status
+                ) VALUES (
+                    :id, :empresa_id, :cliente_id, :codigo, :descricao, :valor_total,
+                    :data_emissao, :data_vencimento, :forma_cobranca, :status
+                )"
+            )->execute([
+                ':id' => generate_uuid(),
+                ':empresa_id' => $empresa['id'],
+                ':cliente_id' => generate_uuid(),
+                ':codigo' => 'CR-3006-' . $i,
+                ':descricao' => 'Receita recorrente ' . $i,
+                ':valor_total' => 100.00,
+                ':data_emissao' => '2026-07-10',
+                ':data_vencimento' => '2026-07-15',
+                ':forma_cobranca' => 'pix',
+                ':status' => 'emitida',
+            ]);
+        }
+
+        $importacao = Conciliacao::criarImportacao($empresa['id'], $usuario['id'], 'extrato_ambiguo.ofx', [
+            [
+                'fitid' => 'FIT-AMB-001',
+                'data_movimento' => '2026-07-15',
+                'valor' => 100.00,
+                'tipo_movimento' => 'credito',
+                'descricao_banco' => 'PIX RECEBIDO',
+                'memo' => 'Recebimento sem identificador',
+            ],
+        ]);
+
+        $resultado = Conciliacao::executarMatchingAutomatico((string) $importacao['id'], $empresa['id'], $usuario['id']);
+        $transacao = Conciliacao::listarTransacoes((string) $importacao['id'], $empresa['id'])[0];
+
+        $this->assertSame(0, (int) $resultado['conciliadas_auto']);
+        $this->assertSame('pendente', $transacao['status_conciliacao']);
+        $this->assertNull($transacao['conta_receber_id']);
+    }
 }

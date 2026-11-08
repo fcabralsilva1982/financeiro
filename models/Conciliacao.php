@@ -108,6 +108,40 @@ final class Conciliacao
         return $stmt->fetchAll();
     }
 
+    public static function listarContasReceberElegiveis(string $empresaId): array
+    {
+        $pdo = db();
+        $stmt = $pdo->prepare(
+            "SELECT cr.id, cr.codigo, cr.descricao, cr.valor_total, cr.data_vencimento,
+                    c.razao_social AS cliente_nome
+             FROM contas_receber cr
+             LEFT JOIN clientes c ON c.id = cr.cliente_id
+             WHERE cr.empresa_id = :empresa_id
+               AND cr.status IN ('emitida','enviada','visualizada','vencida')
+             ORDER BY cr.data_vencimento ASC, cr.codigo ASC"
+        );
+        $stmt->execute([':empresa_id' => $empresaId]);
+        return $stmt->fetchAll();
+    }
+
+    public static function listarParcelasPagarElegiveis(string $empresaId): array
+    {
+        $pdo = db();
+        $stmt = $pdo->prepare(
+            "SELECT cpp.id, cpp.numero_parcela, cpp.valor, cpp.data_vencimento,
+                    cp.codigo AS conta_codigo, cp.descricao, f.razao_social AS fornecedor_nome
+             FROM contas_pagar_parcelas cpp
+             INNER JOIN contas_pagar cp ON cp.id = cpp.conta_pagar_id
+             LEFT JOIN fornecedores f ON f.id = cp.fornecedor_id
+             WHERE cp.empresa_id = :empresa_id
+               AND cpp.status IN ('pendente','vencida')
+               AND cp.status IN ('aprovada','parcialmente_paga','vencida')
+             ORDER BY cpp.data_vencimento ASC, cp.codigo ASC, cpp.numero_parcela ASC"
+        );
+        $stmt->execute([':empresa_id' => $empresaId]);
+        return $stmt->fetchAll();
+    }
+
     public static function fitidJaImportado(string $empresaId, string $fitid): bool
     {
         $fitidNormalizado = trim($fitid);
@@ -295,6 +329,68 @@ final class Conciliacao
         );
     }
 
+    public static function executarMatchingAutomatico(string $importacaoId, string $empresaId, string $usuarioId): array
+    {
+        $transacoes = self::listarTransacoes($importacaoId, $empresaId, [
+            'status_conciliacao' => self::STATUS_PENDENTE,
+        ]);
+
+        $concilidadas = 0;
+        $ignoradasPorAmbiguidade = 0;
+
+        foreach ($transacoes as $transacao) {
+            $transacaoId = (string) ($transacao['id'] ?? '');
+            if ($transacaoId === '') {
+                continue;
+            }
+
+            if ((string) ($transacao['tipo_movimento'] ?? '') === 'credito') {
+                $candidatos = self::buscarCandidatosContaReceber($empresaId, $transacao);
+                if (count($candidatos) === 1) {
+                    self::marcarConciliadoContaReceber(
+                        $transacaoId,
+                        $empresaId,
+                        (string) $candidatos[0]['id'],
+                        $usuarioId,
+                        true,
+                        100
+                    );
+                    $concilidadas++;
+                } else {
+                    $ignoradasPorAmbiguidade++;
+                }
+                continue;
+            }
+
+            if ((string) ($transacao['tipo_movimento'] ?? '') === 'debito') {
+                if (self::descricaoPareceTarifaOuEncargo($transacao)) {
+                    $ignoradasPorAmbiguidade++;
+                    continue;
+                }
+
+                $candidatos = self::buscarCandidatosParcelaPagar($empresaId, $transacao);
+                if (count($candidatos) === 1) {
+                    self::marcarConciliadoContaPagarParcela(
+                        $transacaoId,
+                        $empresaId,
+                        (string) $candidatos[0]['id'],
+                        $usuarioId,
+                        true,
+                        100
+                    );
+                    $concilidadas++;
+                } else {
+                    $ignoradasPorAmbiguidade++;
+                }
+            }
+        }
+
+        return [
+            'conciliadas_auto' => $concilidadas,
+            'pendentes_ou_ambiguas' => $ignoradasPorAmbiguidade,
+        ];
+    }
+
     private static function atualizarStatusTransacao(string $transacaoId, string $empresaId, array $dados): void
     {
         $pdo = db();
@@ -337,7 +433,7 @@ final class Conciliacao
         }
     }
 
-    private static function buscarTransacao(string $transacaoId, string $empresaId): ?array
+    public static function buscarTransacao(string $transacaoId, string $empresaId): ?array
     {
         $pdo = db();
         $stmt = $pdo->prepare(
@@ -396,6 +492,69 @@ final class Conciliacao
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
+    }
+
+    private static function buscarCandidatosContaReceber(string $empresaId, array $transacao): array
+    {
+        $pdo = db();
+        $stmt = $pdo->prepare(
+            "SELECT cr.id
+             FROM contas_receber cr
+             WHERE cr.empresa_id = :empresa_id
+               AND cr.status IN ('emitida','enviada','visualizada','vencida')
+               AND cr.valor_total = :valor
+               AND ABS(DATEDIFF(cr.data_vencimento, :data_movimento)) <= 3
+             ORDER BY cr.data_vencimento ASC, cr.codigo ASC
+             LIMIT 3"
+        );
+        $stmt->execute([
+            ':empresa_id' => $empresaId,
+            ':valor' => (float) ($transacao['valor'] ?? 0),
+            ':data_movimento' => (string) ($transacao['data_movimento'] ?? ''),
+        ]);
+        return $stmt->fetchAll();
+    }
+
+    private static function buscarCandidatosParcelaPagar(string $empresaId, array $transacao): array
+    {
+        $pdo = db();
+        $stmt = $pdo->prepare(
+            "SELECT cpp.id
+             FROM contas_pagar_parcelas cpp
+             INNER JOIN contas_pagar cp ON cp.id = cpp.conta_pagar_id
+             WHERE cp.empresa_id = :empresa_id
+               AND cpp.status IN ('pendente','vencida')
+               AND cp.status IN ('aprovada','parcialmente_paga','vencida')
+               AND cpp.valor = :valor
+               AND ABS(DATEDIFF(cpp.data_vencimento, :data_movimento)) <= 3
+             ORDER BY cpp.data_vencimento ASC, cpp.numero_parcela ASC
+             LIMIT 3"
+        );
+        $stmt->execute([
+            ':empresa_id' => $empresaId,
+            ':valor' => (float) ($transacao['valor'] ?? 0),
+            ':data_movimento' => (string) ($transacao['data_movimento'] ?? ''),
+        ]);
+        return $stmt->fetchAll();
+    }
+
+    private static function descricaoPareceTarifaOuEncargo(array $transacao): bool
+    {
+        $descricao = strtoupper(trim((string) ($transacao['descricao_banco'] ?? '')));
+        $memo = strtoupper(trim((string) ($transacao['memo'] ?? '')));
+        $texto = $descricao . ' ' . $memo;
+        if ($texto === ' ') {
+            return false;
+        }
+
+        $palavras = ['TARIFA', 'PACOTE', 'MENSALIDADE', 'ANUIDADE', 'JUROS', 'IOF', 'ENCARGO'];
+        foreach ($palavras as $palavra) {
+            if (str_contains($texto, $palavra)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function fitidJaImportadoNaConexao(PDO $pdo, string $empresaId, string $fitid): bool

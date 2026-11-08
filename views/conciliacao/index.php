@@ -3,6 +3,9 @@ $pageTitle = __('conciliacao.title');
 $importacoes = $importacoes ?? [];
 $importacaoSelecionada = $importacaoSelecionada ?? null;
 $transacoes = $transacoes ?? [];
+$contasReceberElegiveis = $contasReceberElegiveis ?? [];
+$parcelasPagarElegiveis = $parcelasPagarElegiveis ?? [];
+$podeEditarConciliacao = can_user('conciliacao', 'editar');
 require __DIR__ . '/../layout/header.php';
 require __DIR__ . '/../layout/sidebar.php';
 ?>
@@ -82,6 +85,9 @@ require __DIR__ . '/../layout/sidebar.php';
                                     <th><?= e(__('conciliacao.descricao_banco')) ?></th>
                                     <th><?= e(__('conciliacao.memo')) ?></th>
                                     <th><?= e(__('conciliacao.fitid')) ?></th>
+                                    <?php if ($podeEditarConciliacao): ?>
+                                        <th><?= e(__('conciliacao.acoes')) ?></th>
+                                    <?php endif; ?>
                                 </tr>
                             </thead>
                             <tbody>
@@ -98,6 +104,82 @@ require __DIR__ . '/../layout/sidebar.php';
                                         <td><?= e((string) ($transacao['descricao_banco'] ?? '')) ?></td>
                                         <td><?= e((string) ($transacao['memo'] ?? '')) ?></td>
                                         <td><span class="font-monospace small"><?= e((string) $transacao['fitid']) ?></span></td>
+                                        <?php if ($podeEditarConciliacao): ?>
+                                            <td style="min-width: 320px;">
+                                                <?php if ((string) $transacao['status_conciliacao'] === 'pendente'): ?>
+                                                    <?php if ((string) $transacao['tipo_movimento'] === 'credito'): ?>
+                                                        <form method="POST" action="<?= url('conciliacao', 'conciliar_receber') ?>" class="d-flex gap-2 mb-2">
+                                                            <input type="hidden" name="page" value="conciliacao">
+                                                            <input type="hidden" name="action" value="conciliar_receber">
+                                                            <input type="hidden" name="importacao_id" value="<?= e((string) $importacaoSelecionada['id']) ?>">
+                                                            <input type="hidden" name="transacao_id" value="<?= e((string) $transacao['id']) ?>">
+                                                            <?= csrf_field() ?>
+                                                            <select name="conta_receber_id" class="form-select form-select-sm" required>
+                                                                <option value=""><?= e(__('conciliacao.selecione_conta_receber')) ?></option>
+                                                                <?php foreach ($contasReceberElegiveis as $contaReceber): ?>
+                                                                    <option value="<?= e((string) $contaReceber['id']) ?>">
+                                                                        <?= e((string) $contaReceber['codigo']) ?> —
+                                                                        <?= e(format_money_br((float) $contaReceber['valor_total'])) ?> —
+                                                                        <?= e(date_fmt((string) $contaReceber['data_vencimento'])) ?> —
+                                                                        <?= e((string) ($contaReceber['cliente_nome'] ?? $contaReceber['descricao'])) ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                            <button type="submit" class="btn btn-sm btn-outline-primary"><?= e(__('conciliacao.vincular')) ?></button>
+                                                        </form>
+                                                    <?php else: ?>
+                                                        <form method="POST" action="<?= url('conciliacao', 'conciliar_pagar') ?>" class="d-flex gap-2 mb-2">
+                                                            <input type="hidden" name="page" value="conciliacao">
+                                                            <input type="hidden" name="action" value="conciliar_pagar">
+                                                            <input type="hidden" name="importacao_id" value="<?= e((string) $importacaoSelecionada['id']) ?>">
+                                                            <input type="hidden" name="transacao_id" value="<?= e((string) $transacao['id']) ?>">
+                                                            <?= csrf_field() ?>
+                                                            <select name="conta_pagar_parcela_id" class="form-select form-select-sm" required>
+                                                                <option value=""><?= e(__('conciliacao.selecione_parcela_pagar')) ?></option>
+                                                                <?php foreach ($parcelasPagarElegiveis as $parcela): ?>
+                                                                    <option value="<?= e((string) $parcela['id']) ?>">
+                                                                        <?= e((string) $parcela['conta_codigo']) ?>/<?= e((string) $parcela['numero_parcela']) ?> —
+                                                                        <?= e(format_money_br((float) $parcela['valor'])) ?> —
+                                                                        <?= e(date_fmt((string) $parcela['data_vencimento'])) ?> —
+                                                                        <?= e((string) ($parcela['fornecedor_nome'] ?? $parcela['descricao'])) ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                            <button type="submit" class="btn btn-sm btn-outline-primary"><?= e(__('conciliacao.vincular')) ?></button>
+                                                        </form>
+                                                    <?php endif; ?>
+
+                                                    <div class="d-flex gap-2">
+                                                        <form method="POST" action="<?= url('conciliacao', 'movimento_interno') ?>">
+                                                            <input type="hidden" name="page" value="conciliacao">
+                                                            <input type="hidden" name="action" value="movimento_interno">
+                                                            <input type="hidden" name="importacao_id" value="<?= e((string) $importacaoSelecionada['id']) ?>">
+                                                            <input type="hidden" name="transacao_id" value="<?= e((string) $transacao['id']) ?>">
+                                                            <?= csrf_field() ?>
+                                                            <button type="submit" class="btn btn-sm btn-outline-secondary"><?= e(__('conciliacao.movimento_interno')) ?></button>
+                                                        </form>
+                                                        <form method="POST" action="<?= url('conciliacao', 'ignorar') ?>">
+                                                            <input type="hidden" name="page" value="conciliacao">
+                                                            <input type="hidden" name="action" value="ignorar">
+                                                            <input type="hidden" name="importacao_id" value="<?= e((string) $importacaoSelecionada['id']) ?>">
+                                                            <input type="hidden" name="transacao_id" value="<?= e((string) $transacao['id']) ?>">
+                                                            <?= csrf_field() ?>
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger"><?= e(__('conciliacao.ignorar')) ?></button>
+                                                        </form>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <?php if (!empty($transacao['conta_receber_codigo'])): ?>
+                                                        <span class="badge bg-success"><?= e((string) $transacao['conta_receber_codigo']) ?></span>
+                                                    <?php elseif (!empty($transacao['conta_pagar_codigo'])): ?>
+                                                        <span class="badge bg-danger">
+                                                            <?= e((string) $transacao['conta_pagar_codigo']) ?>/<?= e((string) $transacao['numero_parcela']) ?>
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="text-muted small"><?= e((string) $transacao['origem_match']) ?></span>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                            </td>
+                                        <?php endif; ?>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
